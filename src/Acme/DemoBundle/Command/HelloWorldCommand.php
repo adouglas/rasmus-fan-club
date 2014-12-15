@@ -6,6 +6,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Packagist\Api\Client;
+
 
 /**
  * Hello World command for demo purposes.
@@ -43,6 +45,23 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln(sprintf('Hello <comment>%s</comment>!', $input->getArgument('who')));
+      $client = new Client();
+      foreach ($client->all() as $packageName) {
+        $package = $client->get($packageName);
+        if(strpos($package->getRepository(), 'github.com') !== FALSE){
+          preg_match ( '/(\/|\:)([\w\-]*[^\/#?\s]*\/[\w\-]*[^\/#?\s]*)(|\.git)$/i' , $package->getRepository(), $matches );
+
+          if(count($matches) < 4){
+          printf(
+          '%s'. PHP_EOL,
+
+          $package->getRepository()
+        );
+
+          var_dump($matches);
+}
+        }
+
+      }
     }
 }
