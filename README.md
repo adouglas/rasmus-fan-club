@@ -89,14 +89,14 @@ take you through all the basic features of Symfony2.
 Once you're feeling good, you can move onto reading the official
 [Symfony2 book][5].
 
-A default bundle, `AcmeDemoBundle`, shows you Symfony2 in action. After
+A default bundle, `RasmusPackageMateBundle`, shows you Symfony2 in action. After
 playing with it, you can remove it by following these steps:
 
   * delete the `src/Acme` directory;
 
-  * remove the routing entry referencing AcmeDemoBundle in `app/config/routing_dev.yml`;
+  * remove the routing entry referencing RasmusPackageMateBundle in `app/config/routing_dev.yml`;
 
-  * remove the AcmeDemoBundle from the registered bundles in `app/AppKernel.php`;
+  * remove the RasmusPackageMateBundle from the registered bundles in `app/AppKernel.php`;
 
   * remove the `web/bundles/acmedemo` directory;
 
@@ -147,7 +147,7 @@ It comes pre-configured with the following bundles:
   * [**SensioGeneratorBundle**][13] (in dev/test env) - Adds code generation
     capabilities
 
-  * **AcmeDemoBundle** (in dev/test env) - A demo bundle with some example
+  * **RasmusPackageMateBundle** (in dev/test env) - A demo bundle with some example
     code
 
 All libraries and bundles included in the Symfony Standard Edition are

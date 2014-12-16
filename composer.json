@@ -19,7 +19,8 @@
         "sensio/framework-extra-bundle": "~3.0",
         "incenteev/composer-parameter-handler": "~2.0",
         "symfony/console": "~2.6",
-        "knplabs/packagist-api": "~1.2"
+        "knplabs/packagist-api": "~1.2",
+        "knplabs/github-api": "~1.4"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"
