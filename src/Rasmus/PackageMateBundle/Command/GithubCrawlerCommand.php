@@ -33,8 +33,12 @@ class GithubCrawlerCommand extends Command
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $githubClient = new Github_Client();
-
     $githubClient->authenticate('001a373ab1d3d8f350c0f75692ea36e3397295ee', null, Github_Client::AUTH_HTTP_TOKEN);
+
+
+    $parts = explode('/',$source);
+    $userName = $parts[0];
+    $repoName = $parts[0];
 
 
     $collaborators = $githubClient->api('repo')->contributors($parts[0], $parts[1]);
