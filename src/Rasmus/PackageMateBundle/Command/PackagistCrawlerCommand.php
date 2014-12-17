@@ -63,7 +63,6 @@ class PackagistCrawlerCommand extends Command
           }
           $i++;
         }
-        break;
       }
 
       $time_end = microtime(true);
