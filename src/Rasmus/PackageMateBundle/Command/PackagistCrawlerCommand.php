@@ -39,6 +39,7 @@ class PackagistCrawlerCommand extends Command
       $time_start = microtime(true);
 
       $packagistClient = new Packagist_Client();
+
       $m = new MongoClient();
       $db = $m->rasmus;
       $collection = $db->packagist_packages;
