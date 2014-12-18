@@ -29,3 +29,4 @@
 # Composer PHAR
 /composer.phar
 .DS_Store
+info.aduna.logging.dir_IS_UNDEFINED

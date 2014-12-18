@@ -1,0 +1,17 @@
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX psys:<http://proton.semanticweb.org/protonsys#>
+PREFIX ont:<http://adouglas.github.io/onto/php-packages.rdf#>
+PREFIX owl:<http://www.w3.org/2002/07/owl#>
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX pext:<http://proton.semanticweb.org/protonext#>
+SELECT ?name
+WHERE {
+?pack rdf:type ont:package.
+?pack ont:packageName "0k/php-oe-json".
+?repo rdf:type ont:repository.
+?repo ont:repostoryName ?name.
+?pack ont:hasRepository ?repo.
+}
+
+curl -H "Accept:application/sparql-results+xml" http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=PREFIX%20rdfs%3A%3Chttp%3A%2F%2Fwww.w3.org%2F2000%2F01%2Frdf-schema%23%3E%20PREFIX%20psys%3A%3Chttp%3A%2F%2Fproton.semanticweb.org%2Fprotonsys%23%3E%20PREFIX%20ont%3A%3Chttp%3A%2F%2Fadouglas.github.io%2Fonto%2Fphp-packages.rdf%23%3E%20PREFIX%20owl%3A%3Chttp%3A%2F%2Fwww.w3.org%2F2002%2F07%2Fowl%23%3E%20PREFIX%20xsd%3A%3Chttp%3A%2F%2Fwww.w3.org%2F2001%2FXMLSchema%23%3E%20PREFIX%20rdf%3A%3Chttp%3A%2F%2Fwww.w3.org%2F1999%2F02%2F22-rdf-syntax-ns%23%3E%20PREFIX%20pext%3A%3Chttp%3A%2F%2Fproton.semanticweb.org%2Fprotonext%23%3E%20SELECT%20%3Fname%20WHERE%20%7B%20%20%20%3Fpack%20rdf%3Atype%20ont%3Apackage.%20%20%20%3Fpack%20ont%3ApackageName%20%220k%2Fphp-oe-json%22.%20%20%20%3Frepo%20rdf%3Atype%20ont%3Arepository.%20%20%20%3Frepo%20ont%3ArepostoryName%20%3Fname.%20%20%20%3Fpack%20ont%3AhasRepository%20%3Frepo.%20%7D
