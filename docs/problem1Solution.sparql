@@ -1,0 +1,41 @@
+# Ask for initial check
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX psys:<http://proton.semanticweb.org/protonsys#>
+PREFIX ont:<http://adouglas.github.io/onto/php-packages.rdf#>
+PREFIX owl:<http://www.w3.org/2002/07/owl#>
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX pext:<http://proton.semanticweb.org/protonext#>
+ASK
+{
+  ?start ont:name "tonydspaniard".
+  ?end ont:name "GromNaN".
+  ?start (ont:collaboratesOn/ont:hasCollaborator)* ?end.
+}
+
+
+// Each jump for BFS
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX psys:<http://proton.semanticweb.org/protonsys#>
+PREFIX ont:<http://adouglas.github.io/onto/php-packages.rdf#>
+PREFIX owl:<http://www.w3.org/2002/07/owl#>
+PREFIX xsd:<http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX pext:<http://proton.semanticweb.org/protonext#>
+SELECT ?startname ?endname (group_concat(?name) as ?paths)
+WHERE
+{
+  ?start ont:name "tonydspaniard".
+  ?start ont:name ?startname.
+  ?end ont:name ?endname.
+  ?start ont:collaboratesOn ?mid.
+  ?mid ont:hasCollaborator ?end.
+  ?mid ont:repostoryName ?name.
+  FILTER NOT EXISTS
+  {
+    ?end ont:name ?startname.
+  }
+}GROUP BY ?startname ?endname
+
+// Solve using initial check so we don't waste time
+// Then BFS keeping multiple paths in arrays
