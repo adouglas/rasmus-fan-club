@@ -2,11 +2,14 @@ _welcome:
     path:     /
     defaults: { _controller: RasmusPackageMateBundle:Welcome:index }
 
-_demo_secured:
-    resource: "@RasmusPackageMateBundle/Controller/SecuredController.php"
-    type:     annotation
+package_mate_map_users:
+    pattern:  /map-users
+    defaults: { _controller: RasmusPackageMateBundle:Users:get, _format: ~ }
+    requirements:
+        _method: GET
 
-_demo:
-    resource: "@RasmusPackageMateBundle/Controller/DemoController.php"
-    type:     annotation
-    prefix:   /demo
+package_mate_find_collaborators:
+    pattern:  /find-collaborators
+    defaults: { _controller: RasmusPackageMateBundle:Collaborators:get, _format: ~ }
+    requirements:
+        _method: GET
