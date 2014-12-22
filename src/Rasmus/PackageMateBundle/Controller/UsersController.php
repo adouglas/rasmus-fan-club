@@ -85,24 +85,23 @@ class UsersController extends Controller
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
     $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
 
-    $queue->enqueue($start);
+    $path = new Path();
+
+    $queue->enqueue(new Node($start,$path));
     $visited[md5($start)] = true;
-
-
-
     while(!$queue->isEmpty()){
       $currentNode = $queue->dequeue();
 
-      if($currentNode === $end){
-        return $currentNode;
+      if($currentNode->getValue() === $end){
+        return $currentNode->getPath();
       }
+      
       // Get next set of collaborators
-
       $result = $sparql->query(
       'SELECT ?startname ?endname (group_concat(?name) as ?paths)'.
       'WHERE'.
       '{'.
-        '?start ont:name "'.$currentNode.'".'.
+        '?start ont:name "'.$currentNode->getValue().'".'.
         '?start ont:name ?startname.'.
         '?end ont:name ?endname.'.
         '?start ont:collaboratesOn ?mid.'.
@@ -111,18 +110,21 @@ class UsersController extends Controller
         'FILTER NOT EXISTS'.
         '{'.
           '?end ont:name ?startname.'.
-        '}'.
-      '}GROUP BY ?startname ?endname'
-      );
+          '}'.
+          '}GROUP BY ?startname ?endname'
+        );
 
-      for($i = 0; $i < count($result); $i++){
-        $nodeHash = md5($result[$i]->endname->getValue());
-        if(!array_key_exists($nodeHash,$visited)){
-          $queue->enqueue($result[$i]->endname->getValue());
-          $visited[$nodeHash] = true;
+        for($i = 0; $i < count($result); $i++){
+          $nodeHash = md5($result[$i]->endname->getValue());
+          if(!array_key_exists($nodeHash,$visited)){
+            $path = clone $currentNode->getPath();
+            $path->push(new Hop($result[$i]->paths->getValue(),$result[$i]->endname->getValue()));
+
+            $queue->enqueue(new Node($result[$i]->endname->getValue(),$path));
+            $visited[$nodeHash] = true;
+          }
         }
       }
-    }
     return false;
   }
 
@@ -145,3 +147,44 @@ class UsersController extends Controller
 
 
 class NodeQueue extends \SplQueue {}
+
+class Path extends \SplDoublyLinkedList {}
+
+class Hop {
+  public $repo;
+  public $contributer;
+  public function __construct ($repo,$contributer){
+    $this->repo = $repo;
+    $this->contributer = $contributer;
+  }
+}
+
+class Node {
+  private $path;
+  private $value;
+
+  public function __construct ($value,$path){
+      $this->value = $value;
+      $this->path = $path;
+  }
+
+  public function getValue(){
+    return $this->value;
+  }
+
+  public function getPath(){
+    return $this->path;
+  }
+
+  public function setValue($value){
+    $this->value = $value;
+  }
+
+  public function setPath($path){
+    $this->path = $path;
+  }
+
+  public function addPath($p){
+    $this->path->push($p);
+  }
+}
