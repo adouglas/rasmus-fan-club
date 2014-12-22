@@ -23,7 +23,8 @@
         "knplabs/github-api": "~1.4",
         "friendsofsymfony/rest-bundle": "~1.4",
         "jms/serializer-bundle": "0.13.*",
-        "nelmio/api-doc-bundle": "~2.7"
+        "nelmio/api-doc-bundle": "~2.7",
+        "easyrdf/easyrdf": "0.9.*"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"
