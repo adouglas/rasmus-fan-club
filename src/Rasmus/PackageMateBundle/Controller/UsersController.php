@@ -16,38 +16,132 @@ class UsersController extends Controller
 {
   /**
   * @Rest\View
-  * @QueryParam(name="query", description="Query param")
+  * @QueryParam(name="user1", description="User from which to start the query")
+  * @QueryParam(name="user2", description="User from which to end the query")
   */
   public function getAction(ParamFetcher $paramFetcher)
   {
 
-    $queryString = $paramFetcher->get('query');
+    $user1 = $paramFetcher->get('user1');
+    $user2 = $paramFetcher->get('user2');
 
-    $query=json_decode($queryString);
+    //
+    // var_dump($queryString);
+    // var_dump($query);
+    // die();
 
-    var_dump($queryString);
-    var_dump($query);
-    die();
+    // Initial query asking the triple store if a path between user 1 and user 2 exists.
+    // This is a quick query but will not return a path. This is used to speed up the query for
+    // the end user/and reduce server overheads when no path exists.
+    try{
+      \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
+      $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
+      $result = $sparql->query(
+        'ASK' .
+        '{'.
+          '?start ont:name "'.$user1.'".'.
+          '?end ont:name "'.$user2.'".'.
+          '?start (ont:collaboratesOn/ont:hasCollaborator)* ?end.'.
+        '}'
+      );
+    }
+    catch(Exception $e){
+      // TODO: Logging/devteam notification here?
 
+      // SPARQL endpoint unavalible?
+      return $this->sendResponse([],'Internal Server Error',500);
+    }
 
-    \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
-    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
-    $result = $sparql->query(
-    'ASK' .
-    '{'.
-      '?start ont:name "'.$query["user1"].'".'.
-      '?end ont:name "'.$query["user2"].'".'.
-      '?start (ont:collaboratesOn/ont:hasCollaborator)* ?end.'.
-    '}'
-    );
+    if($result->isFalse()){
+      // There is no possible path between the two users provided
+      return $this->sendResponse([],'No valid path was found');
+    }
+
+    try{
+      $get = $this->BFS($user1,$user2);
+    }
+    catch(Exception $e){
+      // TODO: Logging/devteam notification here?
+      var_dump($e);
+      die;
+      // SPARQL endpoint unavalible?
+      return $this->sendResponse([],'Internal Server Error',500);
+    }
+
+    var_dump($get);
+    die;
+
     // foreach ($result as $row) {
     //   echo "<li>".link_to($row->label, $row->country)."</li>\n";
     // }
+    return $this->sendResponse(["p1"=>$get],'Search complete');
+
+  }
+
+  private function BFS($start,$end){
+    $queue = new NodeQueue();
+    $visited = array();
+
+    \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
+    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
+
+    $queue->enqueue($start);
+    $visited[md5($start)] = true;
+
+
+
+    while(!$queue->isEmpty()){
+      $currentNode = $queue->dequeue();
+
+      if($currentNode === $end){
+        return $currentNode;
+      }
+      // Get next set of collaborators
+
+      $result = $sparql->query(
+      'SELECT ?startname ?endname (group_concat(?name) as ?paths)'.
+      'WHERE'.
+      '{'.
+        '?start ont:name "'.$currentNode.'".'.
+        '?start ont:name ?startname.'.
+        '?end ont:name ?endname.'.
+        '?start ont:collaboratesOn ?mid.'.
+        '?mid ont:hasCollaborator ?end.'.
+        '?mid ont:repostoryName ?name.'.
+        'FILTER NOT EXISTS'.
+        '{'.
+          '?end ont:name ?startname.'.
+        '}'.
+      '}GROUP BY ?startname ?endname'
+      );
+
+      for($i = 0; $i < count($result); $i++){
+        $nodeHash = md5($result[$i]->endname->getValue());
+        if(!array_key_exists($nodeHash,$visited)){
+          $queue->enqueue($result[$i]->endname->getValue());
+          $visited[$nodeHash] = true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private function sendResponse($pathObject,$message='',$code=200){
+
+    $result = array(
+      'message' => $message,
+      'path_found' => (empty($pathObject) ? false : true),
+      'total_count' => count($pathObject),
+      'paths' => $pathObject
+    );
 
     $view = View::create()
-    ->setStatusCode(200)
-    ->setData(array('query'=>$queryString,'result'=>$result))
+    ->setStatusCode($code)
+    ->setData(array('result'=>$result))
     ->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);
   }
 }
+
+
+class NodeQueue extends \SplQueue {}
