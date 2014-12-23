@@ -62,8 +62,7 @@ class UsersController extends Controller
     }
     catch(Exception $e){
       // TODO: Logging/devteam notification here?
-      var_dump($e);
-      die;
+      
       // SPARQL endpoint unavalible?
       return $this->sendResponse([],'Internal Server Error',500);
     }
@@ -95,7 +94,7 @@ class UsersController extends Controller
       if($currentNode->getValue() === $end){
         return $currentNode->getPath();
       }
-      
+
       // Get next set of collaborators
       $result = $sparql->query(
       'SELECT ?startname ?endname (group_concat(?name) as ?paths)'.
