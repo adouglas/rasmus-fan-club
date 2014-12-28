@@ -58,11 +58,11 @@ class UsersController extends Controller
     }
 
     try{
-      $get = $this->BFS($user1,$user2);
+      $get = $this->search($user1,$user2);
     }
     catch(Exception $e){
       // TODO: Logging/devteam notification here?
-      
+
       // SPARQL endpoint unavalible?
       return $this->sendResponse([],'Internal Server Error',500);
     }
@@ -77,53 +77,145 @@ class UsersController extends Controller
 
   }
 
-  private function BFS($start,$end){
-    $queue = new NodeQueue();
-    $visited = array();
+  private function search($start,$end){
+    $logger = $this->get('logger');
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
     $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
 
-    $path = new Path();
+    $queueFF = new NodeQueue();
+    $queueBF = new NodeQueue();
 
-    $queue->enqueue(new Node($start,$path));
-    $visited[md5($start)] = true;
-    while(!$queue->isEmpty()){
-      $currentNode = $queue->dequeue();
+    $visited = array();
+    $visitedRepos = array();
 
-      if($currentNode->getValue() === $end){
-        return $currentNode->getPath();
-      }
+    $pathFF = new Path();
+    $pathFF->push(new Hop(null,$start));
+    $pathBF = new Path();
+    $pathBF->push(new Hop(null,$end));
 
-      // Get next set of collaborators
-      $result = $sparql->query(
-      'SELECT ?startname ?endname (group_concat(?name) as ?paths)'.
-      'WHERE'.
-      '{'.
-        '?start ont:name "'.$currentNode->getValue().'".'.
-        '?start ont:name ?startname.'.
-        '?end ont:name ?endname.'.
-        '?start ont:collaboratesOn ?mid.'.
-        '?mid ont:hasCollaborator ?end.'.
-        '?mid ont:repostoryName ?name.'.
-        'FILTER NOT EXISTS'.
-        '{'.
-          '?end ont:name ?startname.'.
-          '}'.
-          '}GROUP BY ?startname ?endname'
-        );
+    $finalPath = false;
 
-        for($i = 0; $i < count($result); $i++){
-          $nodeHash = md5($result[$i]->endname->getValue());
-          if(!array_key_exists($nodeHash,$visited)){
-            $path = clone $currentNode->getPath();
-            $path->push(new Hop($result[$i]->paths->getValue(),$result[$i]->endname->getValue()));
+    $queueFF->enqueue(new Node($start,$pathFF));
+    $queueBF->enqueue(new Node($end,$pathBF));
 
-            $queue->enqueue(new Node($result[$i]->endname->getValue(),$path));
-            $visited[$nodeHash] = true;
+    $visited[md5($start)] = md5($start);
+
+    $found = false;
+
+    while((!$queueFF->isEmpty() || !$queueBF->isEmpty()) && ($found === false)){
+      if((!$queueFF->isEmpty() && ($found === false))){
+        $found = $this->BFS($start,$end,$sparql,$queueFF,$pathFF,$visited,$visitedRepos);
+        if($found !== false){
+          $logger->info('Found in A: ');
+          if($found === Outcome::PART_SOLUTION){
+              // Need to parse the other queue to find the linking point and add to path
+              while(!$queueBF->isEmpty()){
+                $current = $queueBF->dequeue();
+                if($current->getValue() == $pathFF->top()->contributer){
+                  $finalPath = $pathFF;
+                  $pathBF->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
+                  $pathBF->rewind();
+                  while(!$pathBF->isEmpty()){
+                    $finalPath->push($pathBF->current());
+                    $pathBF->next();
+                  }
+                  break;
+                }
+              }
+          }
+          else{
+            $finalPath = $pathFF;
           }
         }
       }
+      if((!$queueBF->isEmpty() && ($found === false))){
+        $found = $this->BFS($end,$start,$sparql,$queueBF,$pathBF,$visited,$visitedRepos);
+        if($found !== false){
+          if($found === Outcome::PART_SOLUTION){
+            // Need to parse the other queue to find the linking point and add to path
+            while(!$queueFF->isEmpty()){
+              $current = $queueFF->dequeue();
+              if($current->getValue() == $pathBF->top()->contributer){
+                $finalPath = $current->getPath();
+                $pathBF->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
+                $pathBF->rewind();
+                while(!$pathBF->isEmpty()){
+                  $finalPath->push($pathBF->current());
+                  $pathBF->next();
+                }
+                break;
+              }
+            }
+          }
+          else{
+            $finalPath = $pathBF;
+          }
+        }
+      }
+    }
+
+    return $finalPath;
+  }
+
+  private function BFS($start,$end,$sparql,&$queue,&$finalPath,&$visited,&$visitedRepos){
+    $logger = $this->get('logger');
+    $tmpPath = new Path();
+    $tmpVisitedRepos = array();
+
+    $startHash = md5($start);
+
+    $currentNode = $queue->dequeue();
+
+    if($currentNode->getValue() === $end){
+      $finalPath = $currentNode->getPath();
+      return Outcome::WHOLE_SOLUTION;
+    }
+
+    // Get next set of collaborators
+    $result = $sparql->query(
+    'SELECT ?startname ?endname ?repo '.
+    'WHERE'.
+    '{'.
+      '?start ont:name "'.$currentNode->getValue().'".'.
+      '?start ont:name ?startname.'.
+      '?end ont:name ?endname.'.
+      '?start ont:collaboratesOn ?mid.'.
+      '?mid ont:hasCollaborator ?end.'.
+      '?mid ont:repostoryName ?repo.'.
+      'FILTER NOT EXISTS'.
+      '{'.
+        (!$currentNode->getPath()->isEmpty()? '{ ?end ont:name ?startname } UNION { ?repo ont:repostoryName "' . $currentNode->getPath()->top()->repo . '" }' : '' ).
+        '}'.
+        '}LIMIT 1000'
+      );
+
+
+
+      for($i = 0; $i < count($result); $i++){
+        $nodeHash = md5($result[$i]->endname->getValue());
+        $repoHash = md5($result[$i]->repo->getValue());
+        if((!array_key_exists($nodeHash,$visited)) && (!array_key_exists($repoHash,$visitedRepos))){
+          $tmpPath = clone $currentNode->getPath();
+
+          $tmpPath->push(new Hop($result[$i]->repo->getValue(),$result[$i]->endname->getValue()));
+
+          $queue->enqueue(new Node($result[$i]->endname->getValue(),$tmpPath));
+          $visited[$nodeHash] = md5($start);
+          $tmpVisitedRepos[$repoHash] = md5($start);
+        }
+        else{
+          if((array_key_exists($nodeHash,$visited) && $visited[$nodeHash] != md5($start)) || (array_key_exists($repoHash,$visitedRepos) && $visitedRepos[$repoHash] != md5($start))){
+            $logger->info('In found path');
+            $logger->info((array_key_exists($nodeHash,$visited) && $visited[$nodeHash] != md5($start)));
+            $logger->info((array_key_exists($repoHash,$visitedRepos) && $visitedRepos[$repoHash] != md5($start)));
+            $currentNode->getPath()->push(new Hop($result[$i]->repo->getValue(),$result[$i]->endname->getValue()));
+            $finalPath = $currentNode->getPath();
+            return Outcome::PART_SOLUTION;
+          }
+        }
+      }
+      $visitedRepos = array_merge($tmpVisitedRepos,$visitedRepos);
     return false;
   }
 
@@ -156,6 +248,11 @@ class Hop {
     $this->repo = $repo;
     $this->contributer = $contributer;
   }
+}
+
+class Outcome {
+  const WHOLE_SOLUTION = 1;
+  const PART_SOLUTION = 2;
 }
 
 class Node {
