@@ -58,7 +58,7 @@ class UsersController extends Controller
     }
 
     try{
-      $get = $this->search($user1,$user2);
+      $results = $this->search($user1,$user2);
     }
     catch(Exception $e){
       // TODO: Logging/devteam notification here?
@@ -67,13 +67,36 @@ class UsersController extends Controller
       return $this->sendResponse([],'Internal Server Error',500);
     }
 
-    var_dump($get);
-    die;
+    $pathObject = array();
 
-    // foreach ($result as $row) {
-    //   echo "<li>".link_to($row->label, $row->country)."</li>\n";
-    // }
-    return $this->sendResponse(["p1"=>$get],'Search complete');
+    $order = 0;
+
+    for($i = 0; $i < count($results); $i++ ) {
+      if(!is_null($results[$i]->repo)){
+        $pathObject[] = array(
+          'type'=> 'repository',
+          'id'=> $results[$i]->repo,
+          'order' => $order++,
+          'link'=> array(
+            'rel' => 'self',
+            'href' => 'http://github.com/'.$results[$i]->repo
+          )
+        );
+      }
+      if(!(is_null($results[$i]->contributer) || ($i > 0 && $results[$i-1]->contributer == $results[$i]->contributer))){
+        $pathObject[] = array(
+          'type'=> 'collaborator',
+          'id'=> $results[$i]->contributer,
+          'order' => $order++,
+          'link'=> array(
+            'rel' => 'self',
+            'href' => 'http://github.com/'.$results[$i]->contributer
+          )
+        );
+      }
+
+    }
+    return $this->sendResponse($pathObject,'Search complete');
 
   }
 
@@ -220,17 +243,25 @@ class UsersController extends Controller
   }
 
   private function sendResponse($pathObject,$message='',$code=200){
-
     $result = array(
-      'message' => $message,
-      'path_found' => (empty($pathObject) ? false : true),
-      'total_count' => count($pathObject),
-      'paths' => $pathObject
-    );
+      'meta' => array(
+        'status' => $code,
+        'link' => array(
+          array(
+            'rel' => 'self',
+            'href' => $this->getRequest()->getUri()
+          )
+        )
+      ),
+      'data' => array(
+        'message' => $message,
+        'path_found' => (empty($pathObject) ? false : true),
+        'paths' => $pathObject
+    ));
 
     $view = View::create()
     ->setStatusCode($code)
-    ->setData(array('result'=>$result))
+    ->setData($result)
     ->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);
   }
