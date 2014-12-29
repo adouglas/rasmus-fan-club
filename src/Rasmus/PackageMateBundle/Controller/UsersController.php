@@ -50,12 +50,12 @@ class UsersController extends Controller
       // TODO: Logging/devteam notification here?
 
       // SPARQL endpoint unavalible?
-      return $this->sendResponse([],'Internal Server Error',500);
+      return $this->sendResponse(null,'Internal Server Error',500);
     }
 
     if($result->isFalse()){
       // There is no possible path between the two users provided
-      return $this->sendResponse([],'No valid path was found');
+      return $this->sendResponse(null,'No valid path was found');
     }
 
     try{
@@ -65,7 +65,7 @@ class UsersController extends Controller
       // TODO: Logging/devteam notification here?
 
       // SPARQL endpoint unavalible?
-      return $this->sendResponse([],'Internal Server Error',500);
+      return $this->sendResponse(null,'Internal Server Error',500);
     }
 
     $pathObject = array();
@@ -128,56 +128,40 @@ class UsersController extends Controller
 
     while((!$queueFF->isEmpty() || !$queueBF->isEmpty()) && ($found === false)){
       if((!$queueFF->isEmpty() && ($found === false))){
-        $found = $this->BFS($start,$end,$sparql,$queueFF,$pathFF,$visited,$visitedRepos);
-        if($found !== false){
-          if($found === BFSOutcome::PART_SOLUTION){
-              // Need to parse the other queue to find the linking point and add to path
-              while(!$queueBF->isEmpty()){
-                $current = $queueBF->dequeue();
-                if($current->getValue() == $pathFF->top()->contributer){
-                  $finalPath = $pathFF;
-                  $pathBF->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
-                  $pathBF->rewind();
-                  while(!$pathBF->isEmpty()){
-                    $finalPath->push($pathBF->current());
-                    $pathBF->next();
-                  }
-                  break;
-                }
-              }
-          }
-          else{
-            $finalPath = $pathFF;
-          }
-        }
+        $found = $this->searchStep($start,$end,$sparql,$queueFF,$pathFF,$queueBF,$pathBF,$visited,$visitedRepos,$finalPath);
       }
       if((!$queueBF->isEmpty() && ($found === false))){
-        $found = $this->BFS($end,$start,$sparql,$queueBF,$pathBF,$visited,$visitedRepos);
-        if($found !== false){
-          if($found === BFSOutcome::PART_SOLUTION){
-            // Need to parse the other queue to find the linking point and add to path
-            while(!$queueFF->isEmpty()){
-              $current = $queueFF->dequeue();
-              if($current->getValue() == $pathBF->top()->contributer){
-                $finalPath = $current->getPath();
-                $pathBF->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
-                $pathBF->rewind();
-                while(!$pathBF->isEmpty()){
-                  $finalPath->push($pathBF->current());
-                  $pathBF->next();
-                }
-                break;
-              }
-            }
-          }
-          else{
-            $finalPath = $pathBF;
-          }
-        }
+        $found = $this->searchStep($end,$start,$sparql,$queueBF,$pathBF,$queueFF,$pathFF,$visited,$visitedRepos,$finalPath);
       }
     }
 
     return $finalPath;
+  }
+
+  private function searchStep($start,$end,$sparql,&$queueA,&$pathA,&$queueB,&$pathB,&$visited,&$visitedRepos,&$finalPath){
+    $found = $this->BFS($start,$end,$sparql,$queueA,$pathA,$visited,$visitedRepos);
+    if($found !== false){
+      if($found === BFSOutcome::PART_SOLUTION){
+        // Need to parse the other queue to find the linking point and add to path
+        while(!$queueB->isEmpty()){
+          $current = $queueB->dequeue();
+          if($current->getValue() == $pathA->top()->contributer){
+            $finalPath = $current->getPath();
+            $pathA->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
+            $pathA->rewind();
+            while(!$pathA->isEmpty()){
+              $finalPath->push($pathA->current());
+              $pathA->next();
+            }
+            break;
+          }
+        }
+      }
+      else{
+        $finalPath = $pathA;
+      }
+    }
+    return $found;
   }
 
   private function BFS($start,$end,$sparql,&$queue,&$finalPath,&$visited,&$visitedRepos){
@@ -222,6 +206,7 @@ class UsersController extends Controller
           $tmpPath->push(new Hop($result[$i]->repo->getValue(),$result[$i]->endname->getValue()));
 
           $queue->enqueue(new Node($result[$i]->endname->getValue(),$tmpPath));
+
           $visited[$nodeHash] = md5($start);
           $tmpVisitedRepos[$repoHash] = md5($start);
         }
