@@ -12,6 +12,12 @@ use EasyRdf;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
+use Rasmus\PackageMateBundle\Model\BFSOutcome;
+use Rasmus\PackageMateBundle\Model\NodeQueue;
+use Rasmus\PackageMateBundle\Model\Path;
+use Rasmus\PackageMateBundle\Model\Hop;
+use Rasmus\PackageMateBundle\Model\Node;
+
 class UsersController extends Controller
 {
   /**
@@ -24,11 +30,6 @@ class UsersController extends Controller
 
     $user1 = $paramFetcher->get('user1');
     $user2 = $paramFetcher->get('user2');
-
-    //
-    // var_dump($queryString);
-    // var_dump($query);
-    // die();
 
     // Initial query asking the triple store if a path between user 1 and user 2 exists.
     // This is a quick query but will not return a path. This is used to speed up the query for
@@ -101,7 +102,6 @@ class UsersController extends Controller
   }
 
   private function search($start,$end){
-    $logger = $this->get('logger');
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
     $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
@@ -130,8 +130,7 @@ class UsersController extends Controller
       if((!$queueFF->isEmpty() && ($found === false))){
         $found = $this->BFS($start,$end,$sparql,$queueFF,$pathFF,$visited,$visitedRepos);
         if($found !== false){
-          $logger->info('Found in A: ');
-          if($found === Outcome::PART_SOLUTION){
+          if($found === BFSOutcome::PART_SOLUTION){
               // Need to parse the other queue to find the linking point and add to path
               while(!$queueBF->isEmpty()){
                 $current = $queueBF->dequeue();
@@ -155,7 +154,7 @@ class UsersController extends Controller
       if((!$queueBF->isEmpty() && ($found === false))){
         $found = $this->BFS($end,$start,$sparql,$queueBF,$pathBF,$visited,$visitedRepos);
         if($found !== false){
-          if($found === Outcome::PART_SOLUTION){
+          if($found === BFSOutcome::PART_SOLUTION){
             // Need to parse the other queue to find the linking point and add to path
             while(!$queueFF->isEmpty()){
               $current = $queueFF->dequeue();
@@ -182,7 +181,6 @@ class UsersController extends Controller
   }
 
   private function BFS($start,$end,$sparql,&$queue,&$finalPath,&$visited,&$visitedRepos){
-    $logger = $this->get('logger');
     $tmpPath = new Path();
     $tmpVisitedRepos = array();
 
@@ -192,7 +190,7 @@ class UsersController extends Controller
 
     if($currentNode->getValue() === $end){
       $finalPath = $currentNode->getPath();
-      return Outcome::WHOLE_SOLUTION;
+      return BFSOutcome::WHOLE_SOLUTION;
     }
 
     // Get next set of collaborators
@@ -229,12 +227,9 @@ class UsersController extends Controller
         }
         else{
           if((array_key_exists($nodeHash,$visited) && $visited[$nodeHash] != md5($start)) || (array_key_exists($repoHash,$visitedRepos) && $visitedRepos[$repoHash] != md5($start))){
-            $logger->info('In found path');
-            $logger->info((array_key_exists($nodeHash,$visited) && $visited[$nodeHash] != md5($start)));
-            $logger->info((array_key_exists($repoHash,$visitedRepos) && $visitedRepos[$repoHash] != md5($start)));
             $currentNode->getPath()->push(new Hop($result[$i]->repo->getValue(),$result[$i]->endname->getValue()));
             $finalPath = $currentNode->getPath();
-            return Outcome::PART_SOLUTION;
+            return BFSOutcome::PART_SOLUTION;
           }
         }
       }
@@ -264,54 +259,5 @@ class UsersController extends Controller
     ->setData($result)
     ->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);
-  }
-}
-
-
-class NodeQueue extends \SplQueue {}
-
-class Path extends \SplDoublyLinkedList {}
-
-class Hop {
-  public $repo;
-  public $contributer;
-  public function __construct ($repo,$contributer){
-    $this->repo = $repo;
-    $this->contributer = $contributer;
-  }
-}
-
-class Outcome {
-  const WHOLE_SOLUTION = 1;
-  const PART_SOLUTION = 2;
-}
-
-class Node {
-  private $path;
-  private $value;
-
-  public function __construct ($value,$path){
-      $this->value = $value;
-      $this->path = $path;
-  }
-
-  public function getValue(){
-    return $this->value;
-  }
-
-  public function getPath(){
-    return $this->path;
-  }
-
-  public function setValue($value){
-    $this->value = $value;
-  }
-
-  public function setPath($path){
-    $this->path = $path;
-  }
-
-  public function addPath($p){
-    $this->path->push($p);
   }
 }
