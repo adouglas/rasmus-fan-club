@@ -66,8 +66,16 @@ class UsersController extends Controller {
       return $this->sendResponse(null, 'Internal Server Error', 500);
     }
 
+    /**
+     * [$pathObject description]
+     * @var array
+     */
     $pathObject = array();
 
+    /**
+     * [$order description]
+     * @var integer
+     */
     $order = 0;
 
     for ($i = 0; $i < count($results); $i++) {
@@ -96,32 +104,71 @@ class UsersController extends Controller {
 
     }
     return $this->sendResponse($pathObject, 'Search complete');
-
   }
 
+  /**
+   * [search description]
+   * @param  [type] $start [description]
+   * @param  [type] $end   [description]
+   * @return [type]        [description]
+   */
   private function search($start, $end) {
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
     $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
 
+    /**
+     * [$queueFF description]
+     * @var NodeQueue
+     */
     $queueFF = new NodeQueue();
+    /**
+     * [$queueBF description]
+     * @var NodeQueue
+     */
     $queueBF = new NodeQueue();
 
+    /**
+     * [$visited description]
+     * @var array
+     */
     $visited = array();
+    /**
+     * [$visitedRepos description]
+     * @var array
+     */
     $visitedRepos = array();
 
+    /**
+     * [$pathFF description]
+     * @var Path
+     */
     $pathFF = new Path();
     $pathFF->push(new Hop(null, $start));
+    /**
+     * [$pathBF description]
+     * @var Path
+     */
     $pathBF = new Path();
     $pathBF->push(new Hop(null, $end));
 
+    /**
+     * [$finalPath description]
+     * @var [type]
+     */
     $finalPath = false;
 
+    //
     $queueFF->enqueue(new Node($start, $pathFF));
     $queueBF->enqueue(new Node($end, $pathBF));
 
+    //
     $visited[md5($start)] = md5($start);
 
+    /**
+     * [$found description]
+     * @var [type]
+     */
     $found = false;
 
     while ((!$queueFF->isEmpty() || !$queueBF->isEmpty()) && ($found === false)) {
@@ -136,6 +183,20 @@ class UsersController extends Controller {
     return $finalPath;
   }
 
+
+  /**
+   * [searchStep description]
+   * @param [type] $start        [description]
+   * @param [type] $end          [description]
+   * @param [type] $sparql       [description]
+   * @param [type] $queueA       [description]
+   * @param [type] $pathA        [description]
+   * @param [type] $queueB       [description]
+   * @param [type] $pathB        [description]
+   * @param [type] $visited      [description]
+   * @param [type] $visitedRepos [description]
+   * @param [type] $finalPath    [description]
+   */
   private function searchStep($start, $end, $sparql, &$queueA, &$pathA, &$queueB, &$pathB, &$visited, &$visitedRepos, &$finalPath) {
     $found = $this->BFS($start, $end, $sparql, $queueA, $pathA, $visited, $visitedRepos);
     if ($found !== false) {
@@ -161,12 +222,35 @@ class UsersController extends Controller {
     return $found;
   }
 
+
+  /**
+   * [BFS description]
+   * @param [type] $start        [description]
+   * @param [type] $end          [description]
+   * @param [type] $sparql       [description]
+   * @param [type] $queue        [description]
+   * @param [type] $finalPath    [description]
+   * @param [type] $visited      [description]
+   * @param [type] $visitedRepos [description]
+   */
   private function BFS($start, $end, $sparql, &$queue, &$finalPath, &$visited, &$visitedRepos) {
+    /**
+     * [$tmpPath description]
+     * @var Path
+     */
     $tmpPath = new Path();
     $tmpVisitedRepos = array();
 
+    /**
+     * [$startHash description]
+     * @var [type]
+     */
     $startHash = md5($start);
 
+    /**
+     * [$currentNode description]
+     * @var [type]
+     */
     $currentNode = $queue->dequeue();
 
     if ($currentNode->getValue() === $end) {
@@ -192,8 +276,6 @@ class UsersController extends Controller {
         '}LIMIT 1000'
       );
 
-
-
     for ($i = 0; $i < count($result); $i++) {
       $nodeHash = md5($result[$i]->endname->getValue());
       $repoHash = md5($result[$i]->repo->getValue());
@@ -201,7 +283,6 @@ class UsersController extends Controller {
         $tmpPath = clone $currentNode->getPath();
 
         $tmpPath->push(new Hop($result[$i]->repo->getValue(), $result[$i]->endname->getValue()));
-
         $queue->enqueue(new Node($result[$i]->endname->getValue(), $tmpPath));
 
         $visited[$nodeHash] = md5($start);
@@ -214,11 +295,25 @@ class UsersController extends Controller {
         }
       }
     }
+    /**
+     * [$visitedRepos description]
+     * @var array
+     */
     $visitedRepos = array_merge($tmpVisitedRepos, $visitedRepos);
     return false;
   }
 
+  /**
+   * [sendResponse description]
+   * @param [type]  $pathObject [description]
+   * @param string  $message    [description]
+   * @param integer $code       [description]
+   */
   private function sendResponse($pathObject, $message = '', $code = 200) {
+    /**
+     * [$result description]
+     * @var array
+     */
     $result = array(
       'meta' => array(
         'status' => $code,
@@ -236,6 +331,10 @@ class UsersController extends Controller {
       )
     );
 
+    /**
+     * [$view description]
+     * @var [type]
+     */
     $view = View::create()->setStatusCode($code)->setData($result)->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);
   }
