@@ -12,23 +12,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 use MongoClient;
 
 /**
+*	A simple commandline tool to take generated collections of Packagist package -> Github repo and
+*	Github repo -> contributor pairs and build triples from this data. Triples follow the basic ontology
+*	defined at: http://adouglas.github.io/onto/php-packages.rdf.
 *
+* This tool outputs to stdout as such it is recommended that you pipe the result into a file or other
+* method of storage.
 */
 class TripleExporterCommand extends Command {
 
   /**
-  * [configure description]
-  * @return [type] [description]
+  * @inheritDoc
   */
   protected function configure() {
     $this->setName('rasmus:triple-exporter');
   }
 
   /**
-  * [execute description]
-  * @param  InputInterface  $input  [description]
-  * @param  OutputInterface $output [description]
-  * @return [type]                  [description]
+  * @inheritDoc
   */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $time_start = microtime(true);
@@ -41,41 +42,48 @@ class TripleExporterCommand extends Command {
     $i = 0;
     $n = 0;
 
+    // Only fetch packages where the Github contributors have also been stored
     $packagist_packages_cursor = $packagist_packages->find(array(
-      "status" => 1
+      'status' => 1
     ));
+
+    // For each package first print out the triples linking the package, package name, repo, and repo name
     foreach ($packagist_packages_cursor as $_id => $package_value) {
 
-      $repositoryHash = md5($package_value["sourceRepo"]);
+      $repositoryHash = md5($package_value['sourceRepo']);
       // Print the following values
       // _:$_id rdf:type ont:package.
       echo '_:' . $_id . ' rdf:type ont:package.' . PHP_EOL;
-      // _:$_id ont:packageName "$package_value["packageName"] )".
-      echo '_:' . $_id . ' ont:packageName "' . $package_value["packageName"] . '".' . PHP_EOL;
-      // _:$_id rdfs:seeAlso <https://packagist.org/packages/$package_value["packageName"] )>.
-      echo '_:' . $_id . ' rdfs:seeAlso <https://packagist.org/packages/' . $package_value["packageName"] . ' )>.' . PHP_EOL;
+      // _:$_id ont:packageName "$package_value['packageName'] )".
+      echo '_:' . $_id . ' ont:packageName "' . $package_value['packageName'] . '".' . PHP_EOL;
+      // _:$_id rdfs:seeAlso <https://packagist.org/packages/$package_value['packageName'] )>.
+      echo '_:' . $_id . ' rdfs:seeAlso <https://packagist.org/packages/' . $package_value['packageName'] . ' )>.' . PHP_EOL;
       // _:$repositoryHash rdf:type ont:repository.
       echo '_:' . $repositoryHash . ' rdf:type ont:repository.' . PHP_EOL;
-      // _:$repositoryHash ont:repostoryName "$package_value["sourceRepo"]".
-      echo '_:' . $repositoryHash . ' ont:repostoryName "' . $package_value["sourceRepo"] . '".' . PHP_EOL;
-      // _:$repositoryHash rdfs:seeAlso <https://github.com/$package_value["sourceRepo"]>.
-      echo '_:' . $repositoryHash . ' rdfs:seeAlso <https://github.com/' . $package_value["sourceRepo"] . '>.' . PHP_EOL;
+      // _:$repositoryHash ont:repostoryName "$package_value['sourceRepo']".
+      echo '_:' . $repositoryHash . ' ont:repostoryName "' . $package_value['sourceRepo'] . '".' . PHP_EOL;
+      // _:$repositoryHash rdfs:seeAlso <https://github.com/$package_value['sourceRepo']>.
+      echo '_:' . $repositoryHash . ' rdfs:seeAlso <https://github.com/' . $package_value['sourceRepo'] . '>.' . PHP_EOL;
       // _:$_id ont:hasRepository _:$repositoryHash.
       echo '_:' . $_id . ' ont:hasRepository _:' . $repositoryHash . '.' . PHP_EOL;
       // _:$repositoryHash ont:hasPackage _:$_id.
       echo '_:' . $repositoryHash . ' ont:hasPackage _:' . $_id . '.' . PHP_EOL;
 
+
       $github_users_cursor = $github_users->find(array(
-      "repo" => $package_value["sourceRepo"]
+        'repo' => $package_value['sourceRepo']
       ));
+
+      // Loop over the contributors for this package
+      // Print all the triples linking contributor, user name, and repo
       foreach ($github_users_cursor as $_uid => $user_value) {
-        $userHash = md5($user_value["userName"]);
-        // _:$_uid rdf:type ont:developer.
-        echo '_:' . $userHash . ' rdf:type ont:developer.' . PHP_EOL;
-        // _:$userHash ont:name "$user_value["userName"]".
-        echo '_:' . $userHash . ' ont:name "' . $user_value["userName"] . '".' . PHP_EOL;
-        // _:$userHash rdfs:seeAlso <https://github.com/$user_value["userName"]>.
-        echo '_:' . $userHash . ' rdfs:seeAlso <https://github.com/' . $user_value["userName"] . '>.' . PHP_EOL;
+        $userHash = md5($user_value['userName']);
+        // _:$_uid rdf:type ont:contributor.
+        echo '_:' . $userHash . ' rdf:type ont:contributor.' . PHP_EOL;
+        // _:$userHash ont:name "$user_value['userName']".
+        echo '_:' . $userHash . ' ont:name "' . $user_value['userName'] . '".' . PHP_EOL;
+        // _:$userHash rdfs:seeAlso <https://github.com/$user_value['userName']>.
+        echo '_:' . $userHash . ' rdfs:seeAlso <https://github.com/' . $user_value['userName'] . '>.' . PHP_EOL;
         // _:$userHash ont:contributorOn _:$repositoryHash.
         echo '_:' . $userHash . ' ont:contributorOn _:' . $repositoryHash . '.' . PHP_EOL;
         // _:$repositoryHash ont:hasContributor _:$userHash.

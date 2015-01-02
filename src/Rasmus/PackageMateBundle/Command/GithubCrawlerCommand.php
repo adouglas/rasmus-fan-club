@@ -16,34 +16,36 @@ use MongoClient;
 use MongoDuplicateKeyException;
 
 /**
-*
+*	A simple commandline tool to loop over a collection of Packagist package -> Github repo pairs and
+*	identify the contributors for the given repo. These are then saved in a collection of Github repo ->
+*	contributor pairs. Duplicate pairs are ignored.
 */
 class GithubCrawlerCommand extends Command {
 
   /**
-  * [configure description]
-  * @return [type] [description]
+  * @inheritDoc
   */
   protected function configure() {
     $this->setName('rasmus:github-crawler');
   }
 
   /**
-  * [execute description]
-  * @param  InputInterface  $input  [description]
-  * @param  OutputInterface $output [description]
-  * @return [type]                  [description]
+  * @inheritDoc
   */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $time_start = microtime(true);
 
+    // Using the Github API client from https://github.com/KnpLabs/php-github-api
     $githubClient = new Github_Client();
+    // Authenticated user to raise the hourly request limit to 5000
     $githubClient->authenticate('001a373ab1d3d8f350c0f75692ea36e3397295ee', null, Github_Client::AUTH_HTTP_TOKEN);
 
+    // Initialize MongoDB client
     $m = new MongoClient();
     $db = $m->rasmus;
     $packagist_packages = $db->packagist_packages;
     $github_users = $db->github_users;
+    // If not already created set these fields as indexes
     $github_users->createIndex(array(
       'userName' => 1,
       'repo' => 1
@@ -52,58 +54,72 @@ class GithubCrawlerCommand extends Command {
     $i = 0;
     $n = 0;
 
+    // Find only records with status not equal "1"
+    // These are records which have not been processed yet
+    // (usefull to protect against fallovers or it this process is to be
+    // run multiple times on the same data set)
     $packagist_packages_cursor = $packagist_packages->find(array(
-    "status" => array(
-    '$ne' => 1
-    )
-    ));
+      'status' => array(
+      '$ne' => 1
+    )));
+
+    // For each re
     foreach ($packagist_packages_cursor as $_id => $package_value) {
-      $parts = explode('/', $package_value["sourceRepo"]);
+      $parts = explode('/', $package_value['sourceRepo']);
       $userName = $parts[0];
       $repoName = $parts[1];
 
       try {
-        $collaborators = $githubClient->api('repo')->contributors($userName, $repoName);
+        // Fetch the contributors for this repo
+        $contributor = $githubClient->api('repo')->contributors($userName, $repoName);
       }
       catch (RuntimeException $e) {
         // Probably a not found exception
         $newdata = array(
-        '$set' => array(
-        "status" => 0
-        )
+          '$set' => array(
+            'status' => 0
+          )
         );
+
         $packagist_packages->update(array(
-        "packageName" => $package_value["packageName"]
+          'packageName' => $package_value['packageName']
         ), $newdata);
+
         continue;
       }
       catch (ApiLimitExceedException $e) {
         // API Limit exceeded so stop for now
         break;
       }
+
+      // For each contributor create a record linking the contributor to the repo
       foreach ($contributor as $user) {
         $document = array(
-        "userName" => $user["login"],
-        "repo" => $package_value["sourceRepo"]
+          'userName' => $user['login'],
+          'repo' => $package_value['sourceRepo']
         );
 
         try {
           $github_users->insert($document);
         }
         catch (MongoDuplicateKeyException $e) {
-          echo 'Warn: ' . $user["login"] . ' => ' . $package_value["sourceRepo"] . ' already exists and so is skipped' . PHP_EOL;
+          // Ignore duplicates (output a message and carry on)
+          echo 'Warn: ' . $user['login'] . ' => ' . $package_value['sourceRepo'] . ' already exists and so is skipped' . PHP_EOL;
         }
 
         $n++;
       }
 
       $newdata = array(
-      '$set' => array(
-      "status" => 1
-      )
+        '$set' => array(
+          'status' => 1
+        )
       );
+
+      // Once all done update the status of the package record so that it will
+      // not be processed again
       $packagist_packages->update(array(
-      "packageName" => $package_value["packageName"]
+        'packageName' => $package_value['packageName']
       ), $newdata);
 
       $i++;
