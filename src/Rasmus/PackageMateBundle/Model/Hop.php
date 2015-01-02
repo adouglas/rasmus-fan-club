@@ -12,12 +12,12 @@ class Hop {
    */
   public $repo;
   /**
-   * [$contributer description]
+   * [$contributor description]
    * @var [type]
    */
-  public $contributer;
-  public function __construct ($repo,$contributer){
+  public $contributor;
+  public function __construct ($repo,$contributor){
     $this->repo = $repo;
-    $this->contributer = $contributer;
+    $this->contributor = $contributor;
   }
 }

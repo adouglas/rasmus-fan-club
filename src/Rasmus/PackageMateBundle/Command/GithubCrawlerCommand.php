@@ -14,27 +14,16 @@ use Github\Exception\ApiLimitExceedException;
 use MongoClient;
 use MongoDuplicateKeyException;
 
-/**
-* Hello World command for demo purposes.
-*
-* You could also extend from Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand
-* to get access to the container via $this->getContainer().
-*
-* @author Tobias Schultze <http://tobion.de>
-*/
+
 class GithubCrawlerCommand extends Command
 {
-  /**
-  * {@inheritdoc}
-  */
+
   protected function configure()
   {
     $this->setName('rasmus:github-crawler');
   }
 
-  /**
-  * {@inheritdoc}
-  */
+
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $time_start = microtime(true);
@@ -71,7 +60,7 @@ class GithubCrawlerCommand extends Command
         // API Limit exceeded so stop for now
         break;
       }
-      foreach($collaborators as $user){
+      foreach($contributor as $user){
         $document = array( "userName" => $user["login"], "repo" => $package_value["sourceRepo"] );
 
         try{
@@ -92,9 +81,9 @@ class GithubCrawlerCommand extends Command
     $time_end = microtime(true);
     $time = $time_end - $time_start;
 
-    echo '=== Github collaborators loaded into local MongoDB ===' . PHP_EOL;
-    echo 'Info: ' . $n . ' new collaborators added to ' . $i . ' packages' . PHP_EOL;
-    echo 'Info: ' . $github_users->count() . ' collaborators currently stored' . PHP_EOL;
+    echo '=== Github contributors loaded into local MongoDB ===' . PHP_EOL;
+    echo 'Info: ' . $n . ' new contributors added to ' . $i . ' packages' . PHP_EOL;
+    echo 'Info: ' . $github_users->count() . ' contributors currently stored' . PHP_EOL;
     echo 'Info: Script took ' . round($time,2) . ' seconds' . PHP_EOL;
   }
 }

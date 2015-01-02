@@ -13,27 +13,15 @@ use MongoClient;
 use MongoDuplicateKeyException;
 
 
-/**
- * Hello World command for demo purposes.
- *
- * You could also extend from Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand
- * to get access to the container via $this->getContainer().
- *
- * @author Tobias Schultze <http://tobion.de>
- */
 class PackagistCrawlerCommand extends Command
 {
-    /**
-     * {@inheritdoc}
-     */
+
     protected function configure()
     {
         $this->setName('rasmus:packagist-crawler');
     }
 
-    /**
-     * {@inheritdoc}
-     */
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
       $time_start = microtime(true);

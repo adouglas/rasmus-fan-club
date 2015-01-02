@@ -10,27 +10,16 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use MongoClient;
 
-/**
-* Hello World command for demo purposes.
-*
-* You could also extend from Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand
-* to get access to the container via $this->getContainer().
-*
-* @author Tobias Schultze <http://tobion.de>
-*/
+
 class TripleExporterCommand extends Command
 {
-  /**
-  * {@inheritdoc}
-  */
+
   protected function configure()
   {
     $this->setName('rasmus:triple-exporter');
   }
 
-  /**
-  * {@inheritdoc}
-  */
+
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $time_start = microtime(true);
@@ -76,23 +65,21 @@ class TripleExporterCommand extends Command
         echo '_:' . $userHash . ' ont:name "' . $user_value["userName"] . '".' . PHP_EOL;
         // _:$userHash rdfs:seeAlso <https://github.com/$user_value["userName"]>.
         echo '_:' . $userHash . ' rdfs:seeAlso <https://github.com/' . $user_value["userName"] . '>.' . PHP_EOL;
-        // _:$userHash ont:collaboratesOn _:$repositoryHash.
-        echo '_:' . $userHash . ' ont:collaboratesOn _:' . $repositoryHash .'.' . PHP_EOL;
-        // _:$repositoryHash ont:hasCollaborator _:$userHash.
-        echo '_:' . $repositoryHash .' ont:hasCollaborator _:' . $userHash . '.' . PHP_EOL;
+        // _:$userHash ont:contributorOn _:$repositoryHash.
+        echo '_:' . $userHash . ' ont:contributorOn _:' . $repositoryHash .'.' . PHP_EOL;
+        // _:$repositoryHash ont:hasContributor _:$userHash.
+        echo '_:' . $repositoryHash .' ont:hasContributor _:' . $userHash . '.' . PHP_EOL;
         $n++;
       }
-      //$newdata = array( '$set' => array( "status" => 2 ) );
-      //$packagist_packages->update( array( "packageName" => $package_value["packageName"] ), $newdata );
-
+      
       $i++;
     }
 
     $time_end = microtime(true);
     $time = $time_end - $time_start;
 
-    echo '=== Package and collaborator Turtle created from MongoDB ===' . PHP_EOL;
-    echo 'Info: ' . $n . ' collaborators added to ' . $i . ' packages' . PHP_EOL;
+    echo '=== Package and contributor Turtle created from MongoDB ===' . PHP_EOL;
+    echo 'Info: ' . $n . ' contributors added to ' . $i . ' packages' . PHP_EOL;
     echo 'Info: Script took ' . round($time,2) . ' seconds' . PHP_EOL;
 
   }

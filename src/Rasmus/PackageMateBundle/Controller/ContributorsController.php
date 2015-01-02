@@ -15,12 +15,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Rasmus\PackageMateBundle\Model\NodeQueue;
 use Rasmus\PackageMateBundle\Model\RankedNode;
 
-class CollaboratorsController extends Controller {
+class ContributorsController extends Controller {
+
   /**
   * @Rest\View
   * @QueryParam(name="package", description="Packagist package from which to start the query")
-  * @QueryParam(name="page", description="The page of result to view (max 100 / per_page)")
-  * @QueryParam(name="per_page", description="The number of results to have per page (max 50)")
+  * @QueryParam(name="page", description="The page of result to view (where 100 = per_page * page)")
+  * @QueryParam(name="per_page", description="The number of results to have per page (where 100 = per_page * page)")
   */
   public function getAction(ParamFetcher $paramFetcher) {
 
@@ -46,13 +47,13 @@ class CollaboratorsController extends Controller {
       \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
       $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
       $result = $sparql->query(
-      'SELECT ?contributer ' .
+      'SELECT ?contributor ' .
       'WHERE'.
       '{ '.
         '?startPackage ont:packageName "'.$startPackage.'". '.
         '?startPackage ont:hasRepository ?sourceRepo. '.
         '?sourceRepo ont:hasCollaborator ?c. '.
-        '?c ont:name ?contributer' .
+        '?c ont:name ?contributor' .
         '}'
       );
     }
@@ -91,12 +92,6 @@ class CollaboratorsController extends Controller {
 
     $total = count($results);
 
-    // if(($page - 1) * $perPage > $total){
-    //
-    //
-    //   $results = array();
-    // }
-
     $results = array_slice ( $results, ($page-1) * $perPage, $perPage, true );
 
     $list = array();
@@ -119,7 +114,7 @@ class CollaboratorsController extends Controller {
   }
 
 
-  private function search($initialCollaborators) {
+  private function search($initialContributor) {
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
     $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
@@ -130,13 +125,13 @@ class CollaboratorsController extends Controller {
 
     $depth = 1;
 
-    $returnLimit = 100 + count($initialCollaborators);
+    $returnLimit = 100 + count($initialContributor);
 
-    for ($i = 0; $i < count($initialCollaborators); $i++) {
-      $collaborator = $initialCollaborators[$i]->contributer->getValue();
-      $nodeHash = md5($collaborator);
-      $queue->enqueue($collaborator);
-      $visited[$nodeHash] = new RankedNode($nodeHash,$collaborator, 1, 1);
+    for ($i = 0; $i < count($initialContributor); $i++) {
+      $contributor = $initialContributor[$i]->contributer->getValue();
+      $nodeHash = md5($contributor);
+      $queue->enqueue($contributor);
+      $visited[$nodeHash] = new RankedNode($nodeHash,$contributor, 1, 1);
     }
 
     while (!$queue->isEmpty() && count($visited) <= $returnLimit) {
@@ -152,10 +147,7 @@ class CollaboratorsController extends Controller {
 
 
   private function BFS_Ranked($sparql, &$queue, &$visited, &$depth, $finalize) {
-    /**
-    * [$currentNode description]
-    * @var [type]
-    */
+
     $currentNode = $queue->dequeue();
 
     $currentNodeHash = md5($currentNode);
@@ -176,8 +168,8 @@ class CollaboratorsController extends Controller {
       '?start ont:name "'.$currentNode.'". '.
       '?start ont:name ?startname. '.
       '?end ont:name ?endname. '.
-      '?start ont:collaboratesOn ?mid. '.
-      '?mid ont:hasCollaborator ?end. '.
+      '?start ont:contributorOn ?mid. '.
+      '?mid ont:hasContributor ?end. '.
       '?mid ont:repostoryName ?name. '.
       'FILTER NOT EXISTS '.
       '{ '.
@@ -230,10 +222,7 @@ class CollaboratorsController extends Controller {
         'href' => $href
       );
       }
-    /**
-    * [$result description]
-    * @var array
-    */
+
     $result = array(
     'meta' => array(
     'status' => $code,
@@ -243,14 +232,10 @@ class CollaboratorsController extends Controller {
     'link' => $link,),
     'data' => array(
     'message' => $message,
-    'collaborators' => $list
+    'contributor' => $list
     )
     );
 
-    /**
-    * [$view description]
-    * @var [type]
-    */
     $view = View::create()->setStatusCode($code)->setData($result)->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);
   }

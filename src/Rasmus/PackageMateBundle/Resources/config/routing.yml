@@ -1,15 +1,11 @@
-_welcome:
-    path:     /
-    defaults: { _controller: RasmusPackageMateBundle:Welcome:index }
-
 package_mate_map_users:
     pattern:  /map-users
     defaults: { _controller: RasmusPackageMateBundle:Users:get, _format: ~ }
     requirements:
         _method: GET
 
-package_mate_find_collaborators:
-    pattern:  /find-collaborators
-    defaults: { _controller: RasmusPackageMateBundle:Collaborators:get, _format: ~ }
+package_mate_find_contributor:
+    pattern:  /find-contributors
+    defaults: { _controller: RasmusPackageMateBundle:Contributors:get, _format: ~ }
     requirements:
         _method: GET

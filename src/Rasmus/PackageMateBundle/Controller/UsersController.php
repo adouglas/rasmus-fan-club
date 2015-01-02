@@ -40,7 +40,7 @@ class UsersController extends Controller {
       '{'.
         '?start ont:name "'.$user1.'".'.
         '?end ont:name "'.$user2.'".'.
-        '?start (ont:collaboratesOn/ont:hasCollaborator)* ?end.'.
+        '?start (ont:contributorOn/ont:hasContributor)* ?end.'.
         '}'
       );
     }
@@ -90,14 +90,14 @@ class UsersController extends Controller {
           )
         );
       }
-      if (!(is_null($results[$i]->contributer) || ($i > 0 && $results[$i - 1]->contributer == $results[$i]->contributer))) {
+      if (!(is_null($results[$i]->contributor) || ($i > 0 && $results[$i - 1]->contributor == $results[$i]->contributor))) {
         $pathObject[] = array(
-          'type' => 'collaborator',
-          'id' => $results[$i]->contributer,
+          'type' => 'contributor',
+          'id' => $results[$i]->contributor,
           'order' => $order++,
           'link' => array(
             'rel' => 'self',
-            'href' => 'http://github.com/' . $results[$i]->contributer
+            'href' => 'http://github.com/' . $results[$i]->contributor
           )
         );
       }
@@ -204,7 +204,7 @@ class UsersController extends Controller {
         // Need to parse the other queue to find the linking point and add to path
         while (!$queueB->isEmpty()) {
           $current = $queueB->dequeue();
-          if ($current->getValue() == $pathA->top()->contributer) {
+          if ($current->getValue() == $pathA->top()->contributor) {
             $finalPath = $current->getPath();
             $pathA->setIteratorMode(\SplDoublyLinkedList::IT_MODE_LIFO | \SplDoublyLinkedList::IT_MODE_DELETE);
             $pathA->rewind();
@@ -266,8 +266,8 @@ class UsersController extends Controller {
       '?start ont:name "'.$currentNode->getValue().'".'.
       '?start ont:name ?startname.'.
       '?end ont:name ?endname.'.
-      '?start ont:collaboratesOn ?mid.'.
-      '?mid ont:hasCollaborator ?end.'.
+      '?start ont:contributorOn ?mid.'.
+      '?mid ont:hasContributor ?end.'.
       '?mid ont:repostoryName ?repo.'.
       'FILTER NOT EXISTS'.
       '{'.
