@@ -16,28 +16,25 @@ use MongoClient;
 use MongoDuplicateKeyException;
 
 /**
- *
- */
-class GithubCrawlerCommand extends Command
-{
+*
+*/
+class GithubCrawlerCommand extends Command {
 
   /**
-   * [configure description]
-   * @return [type] [description]
-   */
-  protected function configure()
-  {
+  * [configure description]
+  * @return [type] [description]
+  */
+  protected function configure() {
     $this->setName('rasmus:github-crawler');
   }
 
   /**
-   * [execute description]
-   * @param  InputInterface  $input  [description]
-   * @param  OutputInterface $output [description]
-   * @return [type]                  [description]
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
+  * [execute description]
+  * @param  InputInterface  $input  [description]
+  * @param  OutputInterface $output [description]
+  * @return [type]                  [description]
+  */
+  protected function execute(InputInterface $input, OutputInterface $output) {
     $time_start = microtime(true);
 
     $githubClient = new Github_Client();
@@ -47,56 +44,77 @@ class GithubCrawlerCommand extends Command
     $db = $m->rasmus;
     $packagist_packages = $db->packagist_packages;
     $github_users = $db->github_users;
-    $github_users->createIndex(array('userName' => 1, 'repo' => 1));
+    $github_users->createIndex(array(
+      'userName' => 1,
+      'repo' => 1
+    ));
 
     $i = 0;
     $n = 0;
 
-    $packagist_packages_cursor = $packagist_packages->find( array( "status" => array( '$ne' => 1 ) ) );
-    foreach ( $packagist_packages_cursor as $_id => $package_value )
-    {
-      $parts = explode('/',$package_value["sourceRepo"]);
+    $packagist_packages_cursor = $packagist_packages->find(array(
+    "status" => array(
+    '$ne' => 1
+    )
+    ));
+    foreach ($packagist_packages_cursor as $_id => $package_value) {
+      $parts = explode('/', $package_value["sourceRepo"]);
       $userName = $parts[0];
       $repoName = $parts[1];
 
-      try{
+      try {
         $collaborators = $githubClient->api('repo')->contributors($userName, $repoName);
       }
-      catch(RuntimeException $e){
+      catch (RuntimeException $e) {
         // Probably a not found exception
-        $newdata = array( '$set' => array( "status" => 0 ) );
-        $packagist_packages->update( array( "packageName" => $package_value["packageName"] ), $newdata );
+        $newdata = array(
+        '$set' => array(
+        "status" => 0
+        )
+        );
+        $packagist_packages->update(array(
+        "packageName" => $package_value["packageName"]
+        ), $newdata);
         continue;
       }
-      catch(ApiLimitExceedException $e){
+      catch (ApiLimitExceedException $e) {
         // API Limit exceeded so stop for now
         break;
       }
-      foreach($contributor as $user){
-        $document = array( "userName" => $user["login"], "repo" => $package_value["sourceRepo"] );
+      foreach ($contributor as $user) {
+        $document = array(
+        "userName" => $user["login"],
+        "repo" => $package_value["sourceRepo"]
+        );
 
-        try{
+        try {
           $github_users->insert($document);
         }
-        catch(MongoDuplicateKeyException $e){
+        catch (MongoDuplicateKeyException $e) {
           echo 'Warn: ' . $user["login"] . ' => ' . $package_value["sourceRepo"] . ' already exists and so is skipped' . PHP_EOL;
         }
 
         $n++;
       }
 
-      $newdata = array( '$set' => array( "status" => 1 ) );
-      $packagist_packages->update( array( "packageName" => $package_value["packageName"] ), $newdata );
+      $newdata = array(
+      '$set' => array(
+      "status" => 1
+      )
+      );
+      $packagist_packages->update(array(
+      "packageName" => $package_value["packageName"]
+      ), $newdata);
 
       $i++;
     }
-    
+
     $time_end = microtime(true);
     $time = $time_end - $time_start;
 
     echo '=== Github contributors loaded into local MongoDB ===' . PHP_EOL;
     echo 'Info: ' . $n . ' new contributors added to ' . $i . ' packages' . PHP_EOL;
     echo 'Info: ' . $github_users->count() . ' contributors currently stored' . PHP_EOL;
-    echo 'Info: Script took ' . round($time,2) . ' seconds' . PHP_EOL;
+    echo 'Info: Script took ' . round($time, 2) . ' seconds' . PHP_EOL;
   }
 }

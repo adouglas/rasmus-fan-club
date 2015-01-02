@@ -29,17 +29,15 @@ class ContributorsController extends Controller {
     $startPackage = $paramFetcher->get('package');
 
     $page = $paramFetcher->get('page');
-    if(is_null($page)){
+    if (is_null($page)) {
       $page = 1;
-    }
-    else{
+    } else {
       $page = intval($page);
     }
     $perPage = $paramFetcher->get('per_page');
-    if(is_null($perPage)){
+    if (is_null($perPage)) {
       $perPage = 10;
-    }
-    else{
+    } else {
       $perPage = intval($perPage);
     }
 
@@ -47,16 +45,7 @@ class ContributorsController extends Controller {
     try {
       \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
       $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
-      $result = $sparql->query(
-      'SELECT ?contributor ' .
-      'WHERE'.
-      '{ '.
-        '?startPackage ont:packageName "'.$startPackage.'". '.
-        '?startPackage ont:hasRepository ?sourceRepo. '.
-        '?sourceRepo ont:hasCollaborator ?c. '.
-        '?c ont:name ?contributor' .
-        '}'
-      );
+      $result = $sparql->query('SELECT ?contributor ' . 'WHERE' . '{ ' . '?startPackage ont:packageName "' . $startPackage . '". ' . '?startPackage ont:hasRepository ?sourceRepo. ' . '?sourceRepo ont:hasCollaborator ?c. ' . '?c ont:name ?contributor' . '}');
     }
     catch (Exception $e) {
       // TODO: Logging/devteam notification here?
@@ -65,7 +54,7 @@ class ContributorsController extends Controller {
       return $this->sendResponse(null, 'Internal Server Error', 500);
     }
 
-    if ($result->numRows() == 0 ){
+    if ($result->numRows() == 0) {
       // There is no package/no cobtributers
       return $this->sendResponse(null, 'No valid package/initial collaborators found');
     }
@@ -86,7 +75,7 @@ class ContributorsController extends Controller {
     }
 
     //
-    uasort($results,function($a, $b) {
+    uasort($results, function($a, $b) {
       if ($a->getScore() == $b->getScore()) {
         return 0;
       }
@@ -98,19 +87,19 @@ class ContributorsController extends Controller {
     $order = 1;
 
     //
-    $results = array_slice ( $results, ($page-1) * $perPage, $perPage, true );
+    $results = array_slice($results, ($page - 1) * $perPage, $perPage, true);
 
     //
     foreach ($results as $key => $user) {
       $list[] = array(
-        'type' => 'Github User',
-        'username' => $user->getUserName(),
-        'score' => $user->getScore(),
-        'order' => $order++,
-        'link' => array(
-          'rel' => 'self',
-          'href' => 'http://github.com/' . $user->getUserName()
-        )
+      'type' => 'Github User',
+      'username' => $user->getUserName(),
+      'score' => $user->getScore(),
+      'order' => $order++,
+      'link' => array(
+      'rel' => 'self',
+      'href' => 'http://github.com/' . $user->getUserName()
+      )
       );
     }
 
@@ -119,10 +108,10 @@ class ContributorsController extends Controller {
   }
 
   /**
-   * [search description]
-   * @param  [type] $initialContributor [description]
-   * @return [type]                     [description]
-   */
+  * [search description]
+  * @param  [type] $initialContributor [description]
+  * @return [type]                     [description]
+  */
   private function search($initialContributor) {
 
     //
@@ -141,16 +130,16 @@ class ContributorsController extends Controller {
       $contributor = $initialContributor[$i]->contributer->getValue();
       $nodeHash = md5($contributor);
       $queue->enqueue($contributor);
-      $visited[$nodeHash] = new RankedNode($nodeHash,$contributor, 1, 1);
+      $visited[$nodeHash] = new RankedNode($nodeHash, $contributor, 1, 1);
     }
 
     //
     while (!$queue->isEmpty() && count($visited) <= $returnLimit) {
-        $this->BFS_Ranked($sparql, $queue, $visited, $depth, false);
+      $this->BFS_Ranked($sparql, $queue, $visited, $depth, false);
     }
 
     //
-    while (!$queue->isEmpty()){
+    while (!$queue->isEmpty()) {
       $this->BFS_Ranked($sparql, $queue, $visited, $depth, true);
     }
 
@@ -159,13 +148,13 @@ class ContributorsController extends Controller {
 
 
   /**
-   * [BFS_Ranked description]
-   * @param [type] $sparql   [description]
-   * @param [type] $queue    [description]
-   * @param [type] $visited  [description]
-   * @param [type] $depth    [description]
-   * @param [type] $finalize [description]
-   */
+  * [BFS_Ranked description]
+  * @param [type] $sparql   [description]
+  * @param [type] $queue    [description]
+  * @param [type] $visited  [description]
+  * @param [type] $depth    [description]
+  * @param [type] $finalize [description]
+  */
   private function BFS_Ranked($sparql, &$queue, &$visited, &$depth, $finalize) {
 
     //
@@ -178,28 +167,12 @@ class ContributorsController extends Controller {
     $visited[$currentNodeHash]->setScore($currentNodeFinalScore);
 
     //
-    if($finalize){
+    if ($finalize) {
       return true;
     }
 
     // Get next set of collaborators
-    $result = $sparql->query(
-    'SELECT ?startname ?endname (count(?name) as ?link_strength) '.
-    'WHERE '.
-    '{ '.
-      '?start ont:name "'.$currentNode.'". '.
-      '?start ont:name ?startname. '.
-      '?end ont:name ?endname. '.
-      '?start ont:contributorOn ?mid. '.
-      '?mid ont:hasContributor ?end. '.
-      '?mid ont:repostoryName ?name. '.
-      'FILTER NOT EXISTS '.
-      '{ '.
-        '?end ont:name ?startname. '.
-      '} '.
-    '}GROUP BY ?startname ?endname '.
-    'LIMIT 1000'
-    );
+    $result = $sparql->query('SELECT ?startname ?endname (count(?name) as ?link_strength) ' . 'WHERE ' . '{ ' . '?start ont:name "' . $currentNode . '". ' . '?start ont:name ?startname. ' . '?end ont:name ?endname. ' . '?start ont:contributorOn ?mid. ' . '?mid ont:hasContributor ?end. ' . '?mid ont:repostoryName ?name. ' . 'FILTER NOT EXISTS ' . '{ ' . '?end ont:name ?startname. ' . '} ' . '}GROUP BY ?startname ?endname ' . 'LIMIT 1000');
 
     $parentScore = $currentNodeFinalScore;
     $newDepth = $depth + 1;
@@ -207,17 +180,16 @@ class ContributorsController extends Controller {
     //
     for ($i = 0; $i < count($result); $i++) {
       $nodeHash = md5($result[$i]->endname->getValue());
-      if(!array_key_exists($nodeHash, $visited)){
-        $visited[$nodeHash] = new RankedNode($nodeHash,$result[$i]->endname->getValue(), $newDepth, $parentScore + 1);
+      if (!array_key_exists($nodeHash, $visited)) {
+        $visited[$nodeHash] = new RankedNode($nodeHash, $result[$i]->endname->getValue(), $newDepth, $parentScore + 1);
         $queue->enqueue($result[$i]->endname->getValue());
-      }
-      else{
-        $visited[$nodeHash]->conditionalAddScore($result[$i]->link_strength->getValue(),$newDepth);
+      } else {
+        $visited[$nodeHash]->conditionalAddScore($result[$i]->link_strength->getValue(), $newDepth);
       }
     }
 
     //
-    if($visited[$currentNodeHash]->isLast()){
+    if ($visited[$currentNodeHash]->isLast()) {
       $visited[$nodeHash]->setLast(true);
       $depth++;
     }
@@ -226,34 +198,36 @@ class ContributorsController extends Controller {
   }
 
   /**
-   * [sendResponse description]
-   * @param [type]  $list    [description]
-   * @param [type]  $page    [description]
-   * @param [type]  $perPage [description]
-   * @param [type]  $total   [description]
-   * @param string  $message [description]
-   * @param integer $code    [description]
-   */
+  * [sendResponse description]
+  * @param [type]  $list    [description]
+  * @param [type]  $page    [description]
+  * @param [type]  $perPage [description]
+  * @param [type]  $total   [description]
+  * @param string  $message [description]
+  * @param integer $code    [description]
+  */
   private function sendResponse($list, $page, $perPage, $total, $message = '', $code = 200) {
     //
-    $link = array(array(
-      'rel' => 'self',
-      'href' => $this->getRequest()->getUri()
-    ));
-    if($page !== 1 && $total !== 0){
-      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page='.($page+1), $this->getRequest()->getUri());
+    $link = array(
+    array(
+    'rel' => 'self',
+    'href' => $this->getRequest()->getUri()
+    )
+    );
+    if ($page !== 1 && $total !== 0) {
+      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page=' . ($page + 1), $this->getRequest()->getUri());
       $link[] = array(
-        'rel' => 'previous',
-        'href' => $href
+      'rel' => 'previous',
+      'href' => $href
       );
     }
-    if(($page-1) * $perPage > $total){
-      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page='.($page-1), $this->getRequest()->getUri());
+    if (($page - 1) * $perPage > $total) {
+      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page=' . ($page - 1), $this->getRequest()->getUri());
       $link[] = array(
-        'rel' => 'next',
-        'href' => $href
+      'rel' => 'next',
+      'href' => $href
       );
-      }
+    }
 
     //
     $result = array(
@@ -262,13 +236,14 @@ class ContributorsController extends Controller {
     'page' => $page,
     'per_page' => $perPage,
     'total' => $total,
-    'link' => $link,),
+    'link' => $link
+    ),
     'data' => array(
     'message' => $message,
     'contributor' => $list
     )
     );
-    
+
     //
     $view = View::create()->setStatusCode($code)->setData($result)->setFormat('json');
     return $this->get('fos_rest.view_handler')->handle($view);

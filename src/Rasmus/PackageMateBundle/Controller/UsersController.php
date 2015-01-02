@@ -36,14 +36,7 @@ class UsersController extends Controller {
     try {
       \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
       $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
-      $result = $sparql->query(
-      'ASK' .
-      '{'.
-        '?start ont:name "'.$user1.'".'.
-        '?end ont:name "'.$user2.'".'.
-        '?start (ont:contributorOn/ont:hasContributor)* ?end.'.
-        '}'
-      );
+      $result = $sparql->query('ASK' . '{' . '?start ont:name "' . $user1 . '".' . '?end ont:name "' . $user2 . '".' . '?start (ont:contributorOn/ont:hasContributor)* ?end.' . '}');
     }
     catch (Exception $e) {
       // TODO: Logging/devteam notification here?
@@ -68,15 +61,15 @@ class UsersController extends Controller {
     }
 
     /**
-     * [$pathObject description]
-     * @var array
-     */
+    * [$pathObject description]
+    * @var array
+    */
     $pathObject = array();
 
     /**
-     * [$order description]
-     * @var integer
-     */
+    * [$order description]
+    * @var integer
+    */
     $order = 0;
 
     //
@@ -85,26 +78,26 @@ class UsersController extends Controller {
       //
       if (!is_null($results[$i]->repo)) {
         $pathObject[] = array(
-          'type' => 'repository',
-          'id' => $results[$i]->repo,
-          'order' => $order++,
-          'link' => array(
-            'rel' => 'self',
-            'href' => 'http://github.com/' . $results[$i]->repo
-          )
+        'type' => 'repository',
+        'id' => $results[$i]->repo,
+        'order' => $order++,
+        'link' => array(
+        'rel' => 'self',
+        'href' => 'http://github.com/' . $results[$i]->repo
+        )
         );
       }
 
       //
       if (!(is_null($results[$i]->contributor) || ($i > 0 && $results[$i - 1]->contributor == $results[$i]->contributor))) {
         $pathObject[] = array(
-          'type' => 'contributor',
-          'id' => $results[$i]->contributor,
-          'order' => $order++,
-          'link' => array(
-            'rel' => 'self',
-            'href' => 'http://github.com/' . $results[$i]->contributor
-          )
+        'type' => 'contributor',
+        'id' => $results[$i]->contributor,
+        'order' => $order++,
+        'link' => array(
+        'rel' => 'self',
+        'href' => 'http://github.com/' . $results[$i]->contributor
+        )
         );
       }
     }
@@ -114,11 +107,11 @@ class UsersController extends Controller {
   }
 
   /**
-   * [search description]
-   * @param  [type] $start [description]
-   * @param  [type] $end   [description]
-   * @return [type]        [description]
-   */
+  * [search description]
+  * @param  [type] $start [description]
+  * @param  [type] $end   [description]
+  * @return [type]        [description]
+  */
   private function search($start, $end) {
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
@@ -172,18 +165,18 @@ class UsersController extends Controller {
 
 
   /**
-   * [searchStep description]
-   * @param [type] $start        [description]
-   * @param [type] $end          [description]
-   * @param [type] $sparql       [description]
-   * @param [type] $queueA       [description]
-   * @param [type] $pathA        [description]
-   * @param [type] $queueB       [description]
-   * @param [type] $pathB        [description]
-   * @param [type] $visited      [description]
-   * @param [type] $visitedRepos [description]
-   * @param [type] $finalPath    [description]
-   */
+  * [searchStep description]
+  * @param [type] $start        [description]
+  * @param [type] $end          [description]
+  * @param [type] $sparql       [description]
+  * @param [type] $queueA       [description]
+  * @param [type] $pathA        [description]
+  * @param [type] $queueB       [description]
+  * @param [type] $pathB        [description]
+  * @param [type] $visited      [description]
+  * @param [type] $visitedRepos [description]
+  * @param [type] $finalPath    [description]
+  */
   private function searchStep($start, $end, $sparql, &$queueA, &$pathA, &$queueB, &$pathB, &$visited, &$visitedRepos, &$finalPath) {
 
     //
@@ -215,15 +208,15 @@ class UsersController extends Controller {
 
 
   /**
-   * [BFS description]
-   * @param [type] $start        [description]
-   * @param [type] $end          [description]
-   * @param [type] $sparql       [description]
-   * @param [type] $queue        [description]
-   * @param [type] $finalPath    [description]
-   * @param [type] $visited      [description]
-   * @param [type] $visitedRepos [description]
-   */
+  * [BFS description]
+  * @param [type] $start        [description]
+  * @param [type] $end          [description]
+  * @param [type] $sparql       [description]
+  * @param [type] $queue        [description]
+  * @param [type] $finalPath    [description]
+  * @param [type] $visited      [description]
+  * @param [type] $visitedRepos [description]
+  */
   private function BFS($start, $end, $sparql, &$queue, &$finalPath, &$visited, &$visitedRepos) {
 
     //
@@ -243,22 +236,7 @@ class UsersController extends Controller {
     }
 
     // Get next set of collaborators
-    $result = $sparql->query(
-    'SELECT ?startname ?endname ?repo '.
-    'WHERE'.
-    '{'.
-      '?start ont:name "'.$currentNode->getValue().'".'.
-      '?start ont:name ?startname.'.
-      '?end ont:name ?endname.'.
-      '?start ont:contributorOn ?mid.'.
-      '?mid ont:hasContributor ?end.'.
-      '?mid ont:repostoryName ?repo.'.
-      'FILTER NOT EXISTS'.
-      '{'.
-        (!$currentNode->getPath()->isEmpty()? '{ ?end ont:name ?startname } UNION { ?repo ont:repostoryName "' . $currentNode->getPath()->top()->repo . '" }' : '' ).
-        '}'.
-        '}LIMIT 1000'
-      );
+    $result = $sparql->query('SELECT ?startname ?endname ?repo ' . 'WHERE' . '{' . '?start ont:name "' . $currentNode->getValue() . '".' . '?start ont:name ?startname.' . '?end ont:name ?endname.' . '?start ont:contributorOn ?mid.' . '?mid ont:hasContributor ?end.' . '?mid ont:repostoryName ?repo.' . 'FILTER NOT EXISTS' . '{' . (!$currentNode->getPath()->isEmpty() ? '{ ?end ont:name ?startname } UNION { ?repo ont:repostoryName "' . $currentNode->getPath()->top()->repo . '" }' : '') . '}' . '}LIMIT 1000');
 
     //
     for ($i = 0; $i < count($result); $i++) {
@@ -296,29 +274,29 @@ class UsersController extends Controller {
   }
 
   /**
-   * [sendResponse description]
-   * @param [type]  $pathObject [description]
-   * @param string  $message    [description]
-   * @param integer $code       [description]
-   */
+  * [sendResponse description]
+  * @param [type]  $pathObject [description]
+  * @param string  $message    [description]
+  * @param integer $code       [description]
+  */
   private function sendResponse($pathObject, $message = '', $code = 200) {
 
     //
     $result = array(
-      'meta' => array(
-        'status' => $code,
-        'link' => array(
-          array(
-            'rel' => 'self',
-            'href' => $this->getRequest()->getUri()
-          )
-      )
-      ),
-      'data' => array(
-        'message' => $message,
-        'path_found' => (empty($pathObject) ? false : true),
-        'paths' => $pathObject
-      )
+    'meta' => array(
+    'status' => $code,
+    'link' => array(
+    array(
+    'rel' => 'self',
+    'href' => $this->getRequest()->getUri()
+    )
+    )
+    ),
+    'data' => array(
+    'message' => $message,
+    'path_found' => (empty($pathObject) ? false : true),
+    'paths' => $pathObject
+    )
     );
 
     //

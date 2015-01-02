@@ -14,63 +14,67 @@ use MongoClient;
 use MongoDuplicateKeyException;
 
 /**
- *
- */
-class PackagistCrawlerCommand extends Command
-{
-    /**
-     * [configure description]
-     * @return [type] [description]
-     */
-    protected function configure()
-    {
-        $this->setName('rasmus:packagist-crawler');
-    }
+*
+*/
+class PackagistCrawlerCommand extends Command {
+  /**
+  * [configure description]
+  * @return [type] [description]
+  */
+  protected function configure() {
+    $this->setName('rasmus:packagist-crawler');
+  }
 
-    /**
-     * [execute description]
-     * @param  InputInterface  $input  [description]
-     * @param  OutputInterface $output [description]
-     * @return [type]                  [description]
-     */
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-      $time_start = microtime(true);
+  /**
+  * [execute description]
+  * @param  InputInterface  $input  [description]
+  * @param  OutputInterface $output [description]
+  * @return [type]                  [description]
+  */
+  protected function execute(InputInterface $input, OutputInterface $output) {
+    $time_start = microtime(true);
 
-      $packagistClient = new Packagist_Client();
+    $packagistClient = new Packagist_Client();
 
-      $m = new MongoClient();
-      $db = $m->rasmus;
-      $collection = $db->packagist_packages;
-      $collection->ensureIndex( array( "packageName" => 1 ), array( "unique" => true) );
+    $m = new MongoClient();
+    $db = $m->rasmus;
+    $collection = $db->packagist_packages;
+    $collection->ensureIndex(array(
+      "packageName" => 1
+    ), array(
+      "unique" => true
+    ));
 
-      $i = 0;
+    $i = 0;
 
-      foreach ($packagistClient->all() as $packageName) {
-        $package = $packagistClient->get($packageName);
-        if(strpos($package->getRepository(), 'github.com') !== FALSE){
-          preg_match ( '/(\/|\:)([\w\-]+[^\/#?\s]+\/[\w\-]+[^\.\/#?\s]+)(\.git)?$/i' , $package->getRepository(), $matches );
+    foreach ($packagistClient->all() as $packageName) {
+      $package = $packagistClient->get($packageName);
+      if (strpos($package->getRepository(), 'github.com') !== FALSE) {
+        preg_match('/(\/|\:)([\w\-]+[^\/#?\s]+\/[\w\-]+[^\.\/#?\s]+)(\.git)?$/i', $package->getRepository(), $matches);
 
-          if(count($matches) > 2){
-            $document = array( "packageName" => $packageName, "sourceRepo" => $matches[2] );
-            try{
-              $collection->insert($document);
-            }
-            catch(MongoDuplicateKeyException $e){
-              echo 'Warn: ' . $packageName . ' already exists and so is skipped' . PHP_EOL;
-              continue;
-            }
+        if (count($matches) > 2) {
+          $document = array(
+          "packageName" => $packageName,
+          "sourceRepo" => $matches[2]
+          );
+          try {
+            $collection->insert($document);
           }
-          $i++;
+          catch (MongoDuplicateKeyException $e) {
+            echo 'Warn: ' . $packageName . ' already exists and so is skipped' . PHP_EOL;
+            continue;
+          }
         }
+        $i++;
       }
-
-      $time_end = microtime(true);
-      $time = $time_end - $time_start;
-
-      echo '=== Sparse Packagist archive loaded into local MongoDB ===' . PHP_EOL;
-      echo 'Info: ' . $i . ' new packages added' . PHP_EOL;
-      echo 'Info: ' . $collection->count() . ' packages currently stored' . PHP_EOL;
-      echo 'Info: Script took ' . round($time,2) . ' seconds' . PHP_EOL;
     }
+
+    $time_end = microtime(true);
+    $time = $time_end - $time_start;
+
+    echo '=== Sparse Packagist archive loaded into local MongoDB ===' . PHP_EOL;
+    echo 'Info: ' . $i . ' new packages added' . PHP_EOL;
+    echo 'Info: ' . $collection->count() . ' packages currently stored' . PHP_EOL;
+    echo 'Info: Script took ' . round($time, 2) . ' seconds' . PHP_EOL;
+  }
 }

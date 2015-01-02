@@ -12,28 +12,25 @@ use Symfony\Component\Console\Output\OutputInterface;
 use MongoClient;
 
 /**
- *
- */
-class TripleExporterCommand extends Command
-{
+*
+*/
+class TripleExporterCommand extends Command {
 
   /**
-   * [configure description]
-   * @return [type] [description]
-   */
-  protected function configure()
-  {
+  * [configure description]
+  * @return [type] [description]
+  */
+  protected function configure() {
     $this->setName('rasmus:triple-exporter');
   }
 
   /**
-   * [execute description]
-   * @param  InputInterface  $input  [description]
-   * @param  OutputInterface $output [description]
-   * @return [type]                  [description]
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
+  * [execute description]
+  * @param  InputInterface  $input  [description]
+  * @param  OutputInterface $output [description]
+  * @return [type]                  [description]
+  */
+  protected function execute(InputInterface $input, OutputInterface $output) {
     $time_start = microtime(true);
 
     $m = new MongoClient();
@@ -44,9 +41,10 @@ class TripleExporterCommand extends Command
     $i = 0;
     $n = 0;
 
-    $packagist_packages_cursor = $packagist_packages->find( array( "status" => 1 ) );
-    foreach ( $packagist_packages_cursor as $_id => $package_value )
-    {
+    $packagist_packages_cursor = $packagist_packages->find(array(
+      "status" => 1
+    ));
+    foreach ($packagist_packages_cursor as $_id => $package_value) {
 
       $repositoryHash = md5($package_value["sourceRepo"]);
       // Print the following values
@@ -57,19 +55,20 @@ class TripleExporterCommand extends Command
       // _:$_id rdfs:seeAlso <https://packagist.org/packages/$package_value["packageName"] )>.
       echo '_:' . $_id . ' rdfs:seeAlso <https://packagist.org/packages/' . $package_value["packageName"] . ' )>.' . PHP_EOL;
       // _:$repositoryHash rdf:type ont:repository.
-      echo '_:' . $repositoryHash .' rdf:type ont:repository.' . PHP_EOL;
+      echo '_:' . $repositoryHash . ' rdf:type ont:repository.' . PHP_EOL;
       // _:$repositoryHash ont:repostoryName "$package_value["sourceRepo"]".
-      echo '_:' . $repositoryHash .' ont:repostoryName "' . $package_value["sourceRepo"] . '".' . PHP_EOL;
+      echo '_:' . $repositoryHash . ' ont:repostoryName "' . $package_value["sourceRepo"] . '".' . PHP_EOL;
       // _:$repositoryHash rdfs:seeAlso <https://github.com/$package_value["sourceRepo"]>.
-      echo '_:' . $repositoryHash .' rdfs:seeAlso <https://github.com/' . $package_value["sourceRepo"] . '>.' . PHP_EOL;
+      echo '_:' . $repositoryHash . ' rdfs:seeAlso <https://github.com/' . $package_value["sourceRepo"] . '>.' . PHP_EOL;
       // _:$_id ont:hasRepository _:$repositoryHash.
-      echo '_:' . $_id . ' ont:hasRepository _:' . $repositoryHash .'.' . PHP_EOL;
+      echo '_:' . $_id . ' ont:hasRepository _:' . $repositoryHash . '.' . PHP_EOL;
       // _:$repositoryHash ont:hasPackage _:$_id.
-      echo '_:' . $repositoryHash .' ont:hasPackage _:'.$_id.'.' . PHP_EOL;
+      echo '_:' . $repositoryHash . ' ont:hasPackage _:' . $_id . '.' . PHP_EOL;
 
-      $github_users_cursor = $github_users->find( array( "repo" => $package_value["sourceRepo"] ) );
-      foreach ( $github_users_cursor as $_uid => $user_value )
-      {
+      $github_users_cursor = $github_users->find(array(
+      "repo" => $package_value["sourceRepo"]
+      ));
+      foreach ($github_users_cursor as $_uid => $user_value) {
         $userHash = md5($user_value["userName"]);
         // _:$_uid rdf:type ont:developer.
         echo '_:' . $userHash . ' rdf:type ont:developer.' . PHP_EOL;
@@ -78,9 +77,9 @@ class TripleExporterCommand extends Command
         // _:$userHash rdfs:seeAlso <https://github.com/$user_value["userName"]>.
         echo '_:' . $userHash . ' rdfs:seeAlso <https://github.com/' . $user_value["userName"] . '>.' . PHP_EOL;
         // _:$userHash ont:contributorOn _:$repositoryHash.
-        echo '_:' . $userHash . ' ont:contributorOn _:' . $repositoryHash .'.' . PHP_EOL;
+        echo '_:' . $userHash . ' ont:contributorOn _:' . $repositoryHash . '.' . PHP_EOL;
         // _:$repositoryHash ont:hasContributor _:$userHash.
-        echo '_:' . $repositoryHash .' ont:hasContributor _:' . $userHash . '.' . PHP_EOL;
+        echo '_:' . $repositoryHash . ' ont:hasContributor _:' . $userHash . '.' . PHP_EOL;
         $n++;
       }
 
@@ -92,7 +91,7 @@ class TripleExporterCommand extends Command
 
     echo '=== Package and contributor Turtle created from MongoDB ===' . PHP_EOL;
     echo 'Info: ' . $n . ' contributors added to ' . $i . ' packages' . PHP_EOL;
-    echo 'Info: Script took ' . round($time,2) . ' seconds' . PHP_EOL;
+    echo 'Info: Script took ' . round($time, 2) . ' seconds' . PHP_EOL;
 
   }
 }
