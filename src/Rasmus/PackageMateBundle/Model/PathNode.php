@@ -19,6 +19,11 @@ class PathNode extends Node {
    */
   private $value;
 
+  /**
+   * [__construct description]
+   * @param [type] $value [description]
+   * @param [type] $path  [description]
+   */
   public function __construct ($value,$path){
     $this->value = $value;
     $this->path = $path;
@@ -54,6 +59,10 @@ class PathNode extends Node {
     $this->path = $path;
   }
 
+  /**
+   * [addPath description]
+   * @param [type] $p [description]
+   */
   public function addPath($p){
     $this->path->push($p);
   }

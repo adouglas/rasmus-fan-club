@@ -2,6 +2,7 @@
 
 namespace Rasmus\PackageMateBundle\Command;
 
+// Not a great solution to allow a long running process but works for now
 set_time_limit(0);
 
 use Symfony\Component\Console\Command\Command;
@@ -10,16 +11,27 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use MongoClient;
 
-
+/**
+ *
+ */
 class TripleExporterCommand extends Command
 {
 
+  /**
+   * [configure description]
+   * @return [type] [description]
+   */
   protected function configure()
   {
     $this->setName('rasmus:triple-exporter');
   }
 
-
+  /**
+   * [execute description]
+   * @param  InputInterface  $input  [description]
+   * @param  OutputInterface $output [description]
+   * @return [type]                  [description]
+   */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     $time_start = microtime(true);
@@ -71,7 +83,7 @@ class TripleExporterCommand extends Command
         echo '_:' . $repositoryHash .' ont:hasContributor _:' . $userHash . '.' . PHP_EOL;
         $n++;
       }
-      
+
       $i++;
     }
 

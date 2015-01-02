@@ -2,6 +2,7 @@
 
 namespace Rasmus\PackageMateBundle\Command;
 
+// Not a great solution to allow a long running process but works for now
 set_time_limit(0);
 
 use Symfony\Component\Console\Command\Command;
@@ -12,16 +13,26 @@ use Packagist\Api\Client AS Packagist_Client;
 use MongoClient;
 use MongoDuplicateKeyException;
 
-
+/**
+ *
+ */
 class PackagistCrawlerCommand extends Command
 {
-
+    /**
+     * [configure description]
+     * @return [type] [description]
+     */
     protected function configure()
     {
         $this->setName('rasmus:packagist-crawler');
     }
 
-
+    /**
+     * [execute description]
+     * @param  InputInterface  $input  [description]
+     * @param  OutputInterface $output [description]
+     * @return [type]                  [description]
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
       $time_start = microtime(true);
