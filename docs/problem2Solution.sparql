@@ -25,3 +25,11 @@ WHERE
 // Solve using a depth limited breadth first search
 // Then rank by depth and link strength
 // Could be improved by prioritising by link strength when traversing
+
+http://127.0.0.1:8000/find-collaborators?package=10up/http
+
+https://packagist.org/packages/10up/http
+https://github.com/10up/HTTP
+
+https://github.com/ericmann
+https://github.com/johnpbloch

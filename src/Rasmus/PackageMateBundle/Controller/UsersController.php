@@ -16,7 +16,7 @@ use Rasmus\PackageMateBundle\Model\BFSOutcome;
 use Rasmus\PackageMateBundle\Model\NodeQueue;
 use Rasmus\PackageMateBundle\Model\Path;
 use Rasmus\PackageMateBundle\Model\Hop;
-use Rasmus\PackageMateBundle\Model\Node;
+use Rasmus\PackageMateBundle\Model\PathNode;
 
 class UsersController extends Controller {
   /**
@@ -159,8 +159,8 @@ class UsersController extends Controller {
     $finalPath = false;
 
     //
-    $queueFF->enqueue(new Node($start, $pathFF));
-    $queueBF->enqueue(new Node($end, $pathBF));
+    $queueFF->enqueue(new PathNode($start, $pathFF));
+    $queueBF->enqueue(new PathNode($end, $pathBF));
 
     //
     $visited[md5($start)] = md5($start);
@@ -283,7 +283,7 @@ class UsersController extends Controller {
         $tmpPath = clone $currentNode->getPath();
 
         $tmpPath->push(new Hop($result[$i]->repo->getValue(), $result[$i]->endname->getValue()));
-        $queue->enqueue(new Node($result[$i]->endname->getValue(), $tmpPath));
+        $queue->enqueue(new PathNode($result[$i]->endname->getValue(), $tmpPath));
 
         $visited[$nodeHash] = md5($start);
         $tmpVisitedRepos[$repoHash] = md5($start);
