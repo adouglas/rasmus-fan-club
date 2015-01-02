@@ -19,10 +19,27 @@ class CollaboratorsController extends Controller {
   /**
   * @Rest\View
   * @QueryParam(name="package", description="Packagist package from which to start the query")
+  * @QueryParam(name="page", description="The page of result to view (max 100 / per_page)")
+  * @QueryParam(name="per_page", description="The number of results to have per page (max 50)")
   */
   public function getAction(ParamFetcher $paramFetcher) {
 
     $startPackage = $paramFetcher->get('package');
+
+    $page = $paramFetcher->get('page');
+    if(is_null($page)){
+      $page = 1;
+    }
+    else{
+      $page = intval($page);
+    }
+    $perPage = $paramFetcher->get('per_page');
+    if(is_null($perPage)){
+      $perPage = 10;
+    }
+    else{
+      $perPage = intval($perPage);
+    }
 
     // Initial query returning the current contributers for the initial package (startPackage)
     try {
@@ -72,6 +89,15 @@ class CollaboratorsController extends Controller {
       return ($a->getScore() < $b->getScore()) ? 1 : -1;
     });
 
+    $total = count($results);
+
+    // if(($page - 1) * $perPage > $total){
+    //
+    //
+    //   $results = array();
+    // }
+
+    $results = array_slice ( $results, ($page-1) * $perPage, $perPage, true );
 
     $list = array();
 
@@ -89,7 +115,7 @@ class CollaboratorsController extends Controller {
         )
       );
     }
-    return $this->sendResponse($list, 'Search complete');
+    return $this->sendResponse($list, $page, $perPage, $total, 'Search complete');
   }
 
 
@@ -104,7 +130,7 @@ class CollaboratorsController extends Controller {
 
     $depth = 1;
 
-    $maxDepth = 5;
+    $returnLimit = 100 + count($initialCollaborators);
 
     for ($i = 0; $i < count($initialCollaborators); $i++) {
       $collaborator = $initialCollaborators[$i]->contributer->getValue();
@@ -113,7 +139,7 @@ class CollaboratorsController extends Controller {
       $visited[$nodeHash] = new RankedNode($nodeHash,$collaborator, 1, 1);
     }
 
-    while (!$queue->isEmpty() && $depth < $maxDepth) {
+    while (!$queue->isEmpty() && count($visited) <= $returnLimit) {
         $this->BFS_Ranked($sparql, $queue, $visited, $depth, false);
     }
 
@@ -184,7 +210,26 @@ class CollaboratorsController extends Controller {
   }
 
 
-  private function sendResponse($list, $message = '', $code = 200) {
+  private function sendResponse($list, $page, $perPage, $total, $message = '', $code = 200) {
+
+    $link = array(array(
+      'rel' => 'self',
+      'href' => $this->getRequest()->getUri()
+    ));
+    if($page !== 1 && $total !== 0){
+      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page='.($page+1), $this->getRequest()->getUri());
+      $link[] = array(
+        'rel' => 'previous',
+        'href' => $href
+      );
+    }
+    if(($page-1) * $perPage > $total){
+      $href = preg_replace("/\b(?!per)\w*page=[\d+]\b/", 'page='.($page-1), $this->getRequest()->getUri());
+      $link[] = array(
+        'rel' => 'next',
+        'href' => $href
+      );
+      }
     /**
     * [$result description]
     * @var array
@@ -192,16 +237,13 @@ class CollaboratorsController extends Controller {
     $result = array(
     'meta' => array(
     'status' => $code,
-    'link' => array(
-    array(
-    'rel' => 'self',
-    'href' => $this->getRequest()->getUri()
-    )
-    )
-    ),
+    'page' => $page,
+    'per_page' => $perPage,
+    'total' => $total,
+    'link' => $link,),
     'data' => array(
     'message' => $message,
-    'contributers' => $list
+    'collaborators' => $list
     )
     );
 
