@@ -16,7 +16,3 @@ _errors:
 
 _main:
     resource: routing.yml
-
-# RasmusPackageMateBundle routes (to be removed)
-_acme_demo:
-    resource: "@RasmusPackageMateBundle/Resources/config/routing.yml"
