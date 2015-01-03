@@ -3,24 +3,23 @@
 namespace Rasmus\PackageMateBundle\Model;
 
 /**
-*
+* A single "Hop" from contributer to repo (or visa versa)
 */
 class Hop {
   /**
-  * [$repo description]
-  * @var [type]
+  * The repo
+  * @var string
   */
   public $repo;
   /**
-  * [$contributor description]
-  * @var [type]
+  * A single contributer to the given repository
+  * @var string
   */
   public $contributor;
 
   /**
-  * [__construct description]
-  * @param [type] $repo        [description]
-  * @param [type] $contributor [description]
+  * @param string $repo        A single repository
+  * @param string $contributor An associated user (colaborator)
   */
   public function __construct($repo, $contributor) {
     $this->repo = $repo;
