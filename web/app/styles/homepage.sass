@@ -1,0 +1,72 @@
+@import "compass/css3/font-face"
+
+@include font-face("Entypo", url("fonts/entypo/entypo.woff"))
+
+@import "compass/css3/transform"
+
+
+.content.home-page
+  background-color: #FFF
+  > section
+    text-align: center
+    padding: 40px 0
+  #title-block
+    background: #DDD url('../images/code-background.jpg') center top no-repeat
+    .container
+      min-height: 300px
+      max-width: 1080px
+      h2,.tagline-h2
+        display: inline-block
+        background-color: #FFF
+        padding: 10px 15px
+        opacity: 0.9
+        border-radius: 4px
+        text-align: center
+        font-family: Helvetica, Arial, sans-serif
+      h2
+        margin: 40px 0 45px
+        font-size: 36px
+        line-height: 1.25em
+        font-weight: 500
+      .tagline-h2
+        margin-bottom: 20px
+        font-size: 20px
+        color: #555555
+        max-width: 440px
+  #details
+    padding-top: 0
+    background: #DDD
+    .container
+      max-width: 1080px
+      .recruit-option
+        padding: 20px
+        font-size: 16px
+        .circle-icon
+          border: 10px solid #DDD
+          margin: -94px auto 0px
+          background-color: #444
+          width: 128px
+          height: 128px
+          color: #FFF
+          line-height: 121px
+          font-size: 57px
+          border-radius: 50%
+          .icon
+            width: 128px
+            height: 128px
+            margin: -9px -6px 0px
+            font-family: "Entypo"
+            font-size: 128px
+            @include rotate(-90deg)
+          &.circle-icon-find
+            .icon
+              margin: -9px -9px 0px
+        h3
+          font-size: 24px
+          margin-top: 20px
+          margin-bottom: 18px
+        p
+          max-width: 300px
+          margin: 0 auto
+          &.recruit-option-cta
+            margin-top: 20px

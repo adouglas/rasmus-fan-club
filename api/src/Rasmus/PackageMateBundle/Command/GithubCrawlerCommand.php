@@ -89,6 +89,7 @@ class GithubCrawlerCommand extends Command {
       }
       catch (ApiLimitExceedException $e) {
         // API Limit exceeded so stop for now
+        echo 'Warn: API Limit exceeded!' . PHP_EOL;
         break;
       }
 

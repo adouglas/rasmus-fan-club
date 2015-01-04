@@ -1,6 +1,6 @@
-package_mate_map_users:
-    pattern:  /map-users
-    defaults: { _controller: RasmusPackageMateBundle:Users:get, _format: ~ }
+package_mate_trace_users:
+    pattern:  /trace-user
+    defaults: { _controller: RasmusPackageMateBundle:Trace:get, _format: ~ }
     requirements:
         _method: GET
 

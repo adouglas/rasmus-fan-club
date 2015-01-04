@@ -1,23 +1,39 @@
-<div class="jumbotron">
-  <h1>'Allo, 'Allo!</h1>
-  <p class="lead">
-    <img src="images/yeoman.png" alt="I'm Yeoman"><br>
-    Always a pleasure scaffolding your apps.
-  </p>
-  <p><a class="btn btn-lg btn-success" ng-href="#">Splendid!<span class="glyphicon glyphicon-ok"></span></a></p>
-</div>
-
-<div class="row marketing">
-  <h4>HTML5 Boilerplate</h4>
-  <p>
-    HTML5 Boilerplate is a professional front-end template for building fast, robust, and adaptable web apps or sites.
-  </p>
-
-  <h4>Angular</h4>
-  <p>
-    AngularJS is a toolset for building the framework most suited to your application development.
-  </p>
-
-  <h4>Karma</h4>
-  <p>Spectacular Test Runner for JavaScript.</p>
+<div class="content home-page">
+  <section id="title-block">
+    <div class="container">
+      <h2>RecruitMate</h2>
+      <br>
+      <span class="tagline-h2">The tool to help members discover and recuit new contributors for exciting PHP packages.</span>
+    </div>
+  </section>
+  <section id="details">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-6">
+          <div class="recruit-option">
+            <div class="circle-icon circle-icon-trace">
+              <div class="icon">&#128363;</div>
+            </div>
+            <h3>Trace a contributor</h3>
+            <p>Want to know how you are connected to another PHP fanatic on GitHub? With the trace tool you can find the shortest path (in terms of repositories related users collaborate on) between any two users who collaborate on PHP packages accessible through Packagist and hosted on Github. Are we really all separated by six degrees? Now in the world of Packagist you can find out.</p>
+            <p class="recruit-option-cta">
+              <a type="button" href="/trace" class="btn btn-success btn-lg">Start a trace</a>
+            </p>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="recruit-option">
+            <div class="circle-icon circle-icon-find">
+              <div class="icon">&#128362;</div>
+            </div>
+            <h3>Find a new contributor</h3>
+            <p>It can be hard to find new collaboarators. Enter the name of a Package and you will be provided with a prioritised list of potential future collaborators. This list is generated such that existing collaborators have strong social ties with new potentials. Turbo charge your recruitment process for new or ailing projects!</p>
+            <p class="recruit-option-cta">
+              <a type="button" href="/find" class="btn btn-success btn-lg">Find a contributor</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

@@ -2,3 +2,8 @@
 Info: 44254 new packages added
 Info: 43385 packages currently stored
 Info: Script took 4280.29 seconds
+
+=== Sparse Packagist archive loaded into local MongoDB ===
+Info: 45342 new packages added
+Info: 44448 packages currently stored
+Info: Script took 3406.81 seconds

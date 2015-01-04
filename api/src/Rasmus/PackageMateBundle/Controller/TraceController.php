@@ -20,7 +20,7 @@ use Rasmus\PackageMateBundle\Model\PathNode;
 
 /**
 * Controller utilizing the FOSRestBundle to provide functionality for the RESTful service
-* @ /map-users?
+* @ /trace-user?
 *
 * This service utilises a Breadth-First Search approch to traverse the graph of Github repos and
 * contributors stored as triples. The intention is to then return an ordered set of collaborators
@@ -28,7 +28,7 @@ use Rasmus\PackageMateBundle\Model\PathNode;
 * an end user. If no path exists then an empty path is returned
 */
 
-class UsersController extends Controller {
+class TraceController extends Controller {
   /**
   * @Rest\View
   * @QueryParam(name="user1", description="User from which to start the query")
@@ -60,7 +60,7 @@ class UsersController extends Controller {
     }
 
     try {
-      // A path is possibel so call search to find it
+      // A path is possible so call search to find it
       $results = $this->search($user1, $user2);
     }
     catch (Exception $e) {

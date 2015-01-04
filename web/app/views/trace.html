@@ -1,0 +1,84 @@
+<div class="content trace-page">
+  <section id="title-block">
+    <div class="container">
+      <h2>Trace a contributer</h2>
+      <br>
+      <span class="tagline-h2">With the trace tool you can find the shortest path (in terms of repositories related users collaborate on) between any two users who collaborate on PHP packages accessible through Packagist and hosted on Github.</span>
+    </div>
+  </section>
+  <section id="app-interface">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="circle-icon circle-icon-trace">
+            <div class="icon">&#128363;</div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-8 col-sm-offset-2">
+          <div class="row">
+            <div class="col-sm-4">
+              <div class="person-icon">
+                <div class="icon">&#128100;</div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="arrow-icon">
+                <div class="icon">&rarr;</div>
+              </div>
+            </div>
+            <div class="col-sm-4">
+              <div class="person-icon">
+                <div class="icon">&#128100;</div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <form>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label for="exampleInputEmail1">Origin user name</label>
+                  <input type="email" class="form-control" id="originInput" tabindex="1" placeholder="Enter GitHub user name">
+                </div>
+              </div>
+              <div class="col-sm-4">
+                <button type="button" class="btn btn-success btn-lg btn-block" id="submitForm" tabindex="3">Start trace</button>
+              </div>
+              <div class="col-sm-4">
+                <div class="form-group">
+                  <label for="exampleInputEmail1">Target user name</label>
+                  <input type="email" class="form-control" id="targetInput" tabindex="2" placeholder="Enter GitHub user name">
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-8 col-sm-offset-2">
+          <div class="row">
+            <div class="col-sm-12">
+              <div class="content">
+                <div class="results">
+                  <div class="results-row collaborator">
+                    <span class="number">0</span>
+                    <span class="icon">&#128100;</span>
+                    <span class="name">Name</span>
+                    <span class="link"><a href="">http://www.github.com/asldkjl</a></span>
+                  </div>
+                  <div class="results-row repository">
+                    <span class="number">1</span>
+                    <span class="icon">&#128230;</span>
+                    <span class="name">Name</span>
+                    <span class="link"><a href="">http://www.github.com/asldkjl/adssda</a></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

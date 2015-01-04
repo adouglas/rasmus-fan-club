@@ -1,0 +1,102 @@
+@import "compass/css3/transform"
+
+.content.find-page
+  background-color: #FFF
+  > section
+    text-align: center
+    padding: 40px 0
+  #title-block
+    background: #DDD
+    .container
+      min-height: 300px
+      max-width: 1080px
+      h2,.tagline-h2
+        display: inline-block
+        background-color: #555555
+        color: #FFF
+        padding: 10px 15px
+        border-radius: 4px
+        text-align: center
+        font-family: Helvetica, Arial, sans-serif
+      h2
+        margin: 25px 0 25px
+        font-size: 36px
+        line-height: 1.25em
+        font-weight: 500
+      .tagline-h2
+        background-color: #666
+        margin-bottom: 20px
+        font-size: 16px
+        max-width: 440px
+  #app-interface
+    padding-top: 0
+    background: #FFF
+    .container
+      max-width: 1080px
+      .circle-icon
+        border: 10px solid #DDD
+        margin: -94px auto 0px
+        background-color: #444
+        width: 128px
+        height: 128px
+        color: #FFF
+        line-height: 121px
+        font-size: 57px
+        border-radius: 50%
+        .icon
+          width: 128px
+          height: 128px
+          margin: -9px -9px 0px
+          font-family: "Entypo"
+          font-size: 128px
+          @include rotate(-90deg)
+      .person-icon, .arrow-icon
+        .icon
+          font-family: "Entypo"
+          font-size: 128px
+          margin: -10px auto 0px
+          width: 128px
+          height: 115px
+          line-height: 121px
+      .form-inputs
+        text-align: center
+        .form-group
+          text-align: left
+      #submitForm
+        width: 75%
+        margin-left: auto
+        margin-right: auto
+    .results
+      margin-top: 20px
+      .results-row
+        position: relative
+        text-align: left
+        height: 60px
+        .number
+          font-size: 28px
+          line-height: 60px
+          position: absolute
+          top: 0
+          left: 18px
+          color: #5C5C5C
+        .icon
+          font-family: "Entypo"
+          font-size: 70px
+          line-height: 60px
+          position: absolute
+          top: 0
+          left: 45px
+        &.collaborator
+          background-color: #EBEBEB
+        &.repository
+          background-color: #E6E6E6
+        .name
+          position: absolute
+          top: 5px
+          left: 120px
+          font-size: 24px
+        .link
+          position: absolute
+          top: 35px
+          left: 121px
+          font-size: 12px
