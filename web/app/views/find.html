@@ -18,16 +18,28 @@
       <div class="row">
         <div class="col-sm-6 col-sm-offset-3">
           <div class="row">
-            <form>
-              <div class="row form-inputs">
-                <div class="col-sm-12"><div class="form-group">
+            <form name="findForm" novalidate >
+              <div class="row form-inputs" >
+                <div class="col-sm-12"><div class="form-group" show-errors>
                   <label for="packageInput">Package name</label>
-                  <input type="email" class="form-control" id="packageInput" tabindex="1" placeholder="Enter a Packagist project name">
+                  <input type="text" class="form-control" name="packageInput" tabindex="1" placeholder="Enter a Packagist project name" ng-model="pack" ng-required="true" />
+                  <p class="help-block" ng-if="findForm.packageInput.$error.required && findForm.packageInput.$touched">Required</p>
                 </div></div>
                 <div class="col-sm-12">
-                  <button type="button" class="btn btn-success btn-lg btn-block" id="submitForm" tabindex="2">Find potential collaborators</button>
+                  <button type="button" class="btn btn-success btn-lg btn-block" id="submitForm" tabindex="2"ng-click="find()" >{{processing && 'Processing...' || 'Find potential collaborators'}}</button>
                 </div>
               </div>
+              <div ng-if="errors.connectiondown" class="row">
+                <div class="col-sml-12">
+                  <div class="alert alert-danger" role="alert">Sorry we couldn't fulfill your request. Please check your internet connection and try again.</div>
+                </div>
+              </div>
+              <div ng-if="errors.invalidpackage" class="row">
+                <div class="col-sml-12">
+                  <div class="alert alert-danger" role="alert"><b>No new collaborators we found.</b> This may be the correct answer, however, if you belive this is incorrect please check the package name entered above.</div>
+                </div>
+              </div>
+            </div>
             </form>
           </div>
         </div>
@@ -38,17 +50,12 @@
             <div class="col-sm-12">
               <div class="content">
                 <div class="results">
-                  <div class="results-row">
-                    <span class="number">1</span>
-                    <span class="icon">&#128100;</span>
-                    <span class="name">Name</span>
-                    <span class="link"><a href="">http://www.github.com/asldkjl</a></span>
-                  </div>
-                  <div class="results-row">
-                    <span class="number">1</span>
-                    <span class="icon">&#128100;</span>
-                    <span class="name">Name</span>
-                    <span class="link"><a href="">http://www.github.com/asldkjl</a></span>
+                  <div class="results-row" ng-repeat="result in users">
+                    <span class="number">{{$index}}</span>
+                    <span ng-if="result.type == 'contributor'" class="icon">&#128100;</span>
+                    <span ng-if="result.type == 'repository'" class="icon">&#128230;</span>
+                    <span class="name">{{result.username}}</span>
+                    <span class="link"><a href="{{result.link.href}}">{{result.link.href}}</a></span>
                   </div>
                 </div>
               </div>

@@ -297,7 +297,8 @@ class ContributorsController extends Controller {
     ),
     'data' => array(
     'message' => $message,
-    'contributor' => $list
+    'contributors_found' => (empty($list) ? false : true),
+    'contributors' => $list
     )
     );
 

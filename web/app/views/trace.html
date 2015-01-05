@@ -35,23 +35,35 @@
             </div>
           </div>
           <div class="row">
-            <form>
+            <form name="traceForm" novalidate >
               <div class="col-sm-4">
-                <div class="form-group">
-                  <label for="exampleInputEmail1">Origin user name</label>
-                  <input type="email" class="form-control" id="originInput" tabindex="1" placeholder="Enter GitHub user name">
+                <div class="form-group" show-errors >
+                  <label for="user1-input">Origin user name</label>
+                  <input type="text" class="form-control" name="user1" tabindex="1" placeholder="Enter GitHub user name" ng-model="users.user1" ng-required="true" />
+                  <p class="help-block" ng-if="traceForm.user1.$error.required && traceForm.user1.$touched">Required</p>
                 </div>
               </div>
               <div class="col-sm-4">
-                <button type="button" class="btn btn-success btn-lg btn-block" id="submitForm" tabindex="3">Start trace</button>
+                <button type="button" class="btn btn-success btn-lg btn-block" id="submitForm" tabindex="3" ng-click="trace()" >{{processing && 'Processing...' || 'Start trace'}}</button>
               </div>
               <div class="col-sm-4">
-                <div class="form-group">
-                  <label for="exampleInputEmail1">Target user name</label>
-                  <input type="email" class="form-control" id="targetInput" tabindex="2" placeholder="Enter GitHub user name">
+                <div class="form-group" show-errors >
+                  <label for="user2-inpu">Target user name</label>
+                  <input type="text" class="form-control" name="user2" tabindex="2" placeholder="Enter GitHub user name" ng-model="users.user2" ng-disable="processing" ng-required="true" />
+                  <p class="help-block" ng-if="traceForm.user2.$error.required && traceForm.user2.$touched">Required</p>
                 </div>
               </div>
             </form>
+          </div>
+          <div ng-if="errors.connectiondown" class="row">
+            <div class="col-sml-12">
+              <div class="alert alert-danger" role="alert">Sorry we couldn't fulfill your request. Please check your internet connection and try again.</div>
+            </div>
+          </div>
+          <div ng-if="errors.invalidusers" class="row">
+            <div class="col-sml-12">
+              <div class="alert alert-danger" role="alert"><b>No valid path was found.</b> This may be the correct answer, however, if you belive there should be a path please check the origin and target user names entered above.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -61,17 +73,12 @@
             <div class="col-sm-12">
               <div class="content">
                 <div class="results">
-                  <div class="results-row collaborator">
-                    <span class="number">0</span>
-                    <span class="icon">&#128100;</span>
-                    <span class="name">Name</span>
-                    <span class="link"><a href="">http://www.github.com/asldkjl</a></span>
-                  </div>
-                  <div class="results-row repository">
-                    <span class="number">1</span>
-                    <span class="icon">&#128230;</span>
-                    <span class="name">Name</span>
-                    <span class="link"><a href="">http://www.github.com/asldkjl/adssda</a></span>
+                  <div ng-repeat="result in paths" class="results-row">
+                    <span class="number">{{result.order}}</span>
+                    <span ng-if="result.type == 'contributor'" class="icon">&#128100;</span>
+                    <span ng-if="result.type == 'repository'" class="icon">&#128230;</span>
+                    <span class="name">{{result.id}}</span>
+                    <span class="link"><a href="{{result.link.href}}">{{result.link.href}}</a></span>
                   </div>
                 </div>
               </div>
