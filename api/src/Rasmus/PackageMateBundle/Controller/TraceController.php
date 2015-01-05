@@ -91,16 +91,31 @@ class TraceController extends Controller {
       }
 
       // This node is a contributer
-      if (!(is_null($results[$i]->contributor) || ($i > 0 && $results[$i - 1]->contributor == $results[$i]->contributor))) {
-        $pathObject[] = array(
-          'type' => 'contributor',
-          'id' => $results[$i]->contributor,
-          'order' => $order++,
-          'link' => array(
-            'rel' => 'self',
-            'href' => 'http://github.com/' . $results[$i]->contributor
-          )
-        );
+      if (!is_null($results[$i]->contributor)){
+        if($i > 0){
+          if(($results[$i - 1]->contributor != $results[$i]->contributor)){
+            $pathObject[] = array(
+              'type' => 'contributor',
+              'id' => $results[$i]->contributor,
+              'order' => $order++,
+              'link' => array(
+                'rel' => 'self',
+                'href' => 'http://github.com/' . $results[$i]->contributor
+              )
+            );
+          }
+        }
+        else{
+          $pathObject[] = array(
+            'type' => 'contributor',
+            'id' => $results[$i]->contributor,
+            'order' => $order++,
+            'link' => array(
+              'rel' => 'self',
+              'href' => 'http://github.com/' . $results[$i]->contributor
+            )
+          );
+        }
       }
     }
     return $this->sendResponse($pathObject, 'Search complete');
@@ -118,7 +133,7 @@ class TraceController extends Controller {
   private function search($start, $end) {
 
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
-    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
+    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?limit=0&query=');
 
     // Queues to store nodes to be visited
     $queueFF = new NodeQueue();
@@ -128,6 +143,7 @@ class TraceController extends Controller {
     $visited = array();
     $visitedRepos = array();
     $visited[md5($start)] = md5($start);
+    $visited[md5($end)] = md5($end);
 
     // Paths from the root node to the current position
     $pathFF = new Path();
@@ -185,7 +201,7 @@ class TraceController extends Controller {
     if ($found !== false) {
       // If the solution is a partial solution then the current search direction has overlapped with the opposite search
       // direction and so the two must be joined
-      if ($found === BFSOutcome::PART_SOLUTION) {
+      if ($found == BFSOutcome::PART_SOLUTION) {
         // Need to parse the other queue to find the linking point and add to path
         while (!$queueB->isEmpty()) {
           $current = $queueB->dequeue();
@@ -229,7 +245,7 @@ class TraceController extends Controller {
     // Hashes are used to besure that an array key can be gained
     $startHash = md5($start);
 
-    // INspect the node at the top of the queue
+    // Inspect the node at the top of the queue
     $currentNode = $queue->dequeue();
 
     // If this node = the end return a whole soltion
@@ -238,8 +254,22 @@ class TraceController extends Controller {
       return BFSOutcome::WHOLE_SOLUTION;
     }
 
-    // Get next set of collaborators
-    $result = $sparql->query('SELECT ?startname ?endname ?repo ' . 'WHERE' . '{' . '?start ont:name "' . $currentNode->getValue() . '".' . '?start ont:name ?startname.' . '?end ont:name ?endname.' . '?start ont:contributorOn ?mid.' . '?mid ont:hasContributor ?end.' . '?mid ont:repostoryName ?repo.' . 'FILTER NOT EXISTS' . '{' . (!$currentNode->getPath()->isEmpty() ? '{ ?end ont:name ?startname } UNION { ?repo ont:repostoryName "' . $currentNode->getPath()->top()->repo . '" }' : '') . '}' . '}LIMIT 1000');
+    // Get next set of contributors
+    $result = $sparql->query(
+    'SELECT ?startname ?endname ?repo ' .
+    'WHERE' .
+    '{' .
+      '?start ont:name "' . $currentNode->getValue() . '".' .
+      '?start ont:name ?startname.' .
+      '?end ont:name ?endname.' .
+      '?start ont:contributorOn ?mid.' .
+      '?mid ont:hasContributor ?end.' .
+      '?mid ont:repostoryName ?repo.' .
+      'FILTER NOT EXISTS' .
+      '{' .
+        (!$currentNode->getPath()->isEmpty() ? '{ ?end ont:name ?startname } UNION { ?repo ont:repostoryName "' . $currentNode->getPath()->top()->repo . '" }' : '') .
+      '}' .
+    '}LIMIT 4000');
 
     // Loopover the users found
     for ($i = 0; $i < count($result); $i++) {
@@ -255,19 +285,18 @@ class TraceController extends Controller {
 
         $queue->enqueue(new PathNode($result[$i]->endname->getValue(), $tmpPath));
 
-        $visited[$nodeHash] = md5($start);
-        $tmpVisitedRepos[$repoHash] = md5($start);
+        $visited[$nodeHash] = $startHash;
+        $tmpVisitedRepos[$repoHash] = $startHash;
       } else {
-
         // If the node has been visited (by the other dimension) this is a partial solution
-        if ((array_key_exists($nodeHash, $visited) && $visited[$nodeHash] != md5($start)) || (array_key_exists($repoHash, $visitedRepos) && $visitedRepos[$repoHash] != md5($start))) {
-          $currentNode->getPath()->push(new Hop($result[$i]->repo->getValue(), $result[$i]->endname->getValue()));
+        if ((array_key_exists($nodeHash, $visited) && ($visited[$nodeHash] !== $startHash)) || (array_key_exists($repoHash, $visitedRepos) && ($visitedRepos[$repoHash] !== $startHash))) {
+
+          $currentNode->addPath(new Hop($result[$i]->repo->getValue(), $result[$i]->endname->getValue()));
           $finalPath = $currentNode->getPath();
           return BFSOutcome::PART_SOLUTION;
         }
       }
     }
-
     $visitedRepos = array_merge($tmpVisitedRepos, $visitedRepos);
     return false;
   }

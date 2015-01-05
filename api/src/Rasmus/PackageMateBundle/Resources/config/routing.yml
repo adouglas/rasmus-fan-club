@@ -1,11 +1,11 @@
-package_mate_trace_users:
-    pattern:  /trace-user
-    defaults: { _controller: RasmusPackageMateBundle:Trace:get, _format: ~ }
-    requirements:
-        _method: GET
-
-package_mate_find_contributor:
+package_mate_find_contributors:
     pattern:  /find-contributors
     defaults: { _controller: RasmusPackageMateBundle:Contributors:get, _format: ~ }
+    requirements:
+        _method: GET
+        
+package_mate_trace_user:
+    pattern:  /trace-user
+    defaults: { _controller: RasmusPackageMateBundle:Trace:get, _format: ~ }
     requirements:
         _method: GET

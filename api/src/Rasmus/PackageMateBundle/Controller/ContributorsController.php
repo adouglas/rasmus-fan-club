@@ -55,8 +55,16 @@ class ContributorsController extends Controller {
     // Initial query returning the current contributers for the initial package (startPackage)
     try {
       \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
-      $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
-      $result = $sparql->query('SELECT ?contributor ' . 'WHERE' . '{ ' . '?startPackage ont:packageName "' . $startPackage . '". ' . '?startPackage ont:hasRepository ?sourceRepo. ' . '?sourceRepo ont:hasCollaborator ?c. ' . '?c ont:name ?contributor' . '}');
+      $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?limit=0&query=');
+      $result = $sparql->query(
+      'SELECT ?contributor ' .
+      'WHERE' .
+      '{ ' .
+        '?startPackage ont:packageName "' . $startPackage . '". ' .
+        '?startPackage ont:hasRepository ?sourceRepo. ' .
+        '?sourceRepo ont:hasContributor ?c. ' .
+        '?c ont:name ?contributor' .
+        '}LIMIT 2000');
     }
     catch (Exception $e) {
       // TODO: Logging/devteam notification here?
@@ -83,7 +91,7 @@ class ContributorsController extends Controller {
 
     // Remove the original contributors (as they are already associated with this package/repo)
     for ($i = 0; $i < count($result); $i++) {
-      unset($results[md5($result[$i]->contributer->getValue())]);
+      unset($results[md5($result[$i]->contributor->getValue())]);
     }
 
     // Sort new contributors by scores
@@ -114,8 +122,6 @@ class ContributorsController extends Controller {
       )
       );
     }
-
-    //
     return $this->sendResponse($list, $page, $perPage, $total, 'Search complete');
   }
 
@@ -135,7 +141,7 @@ class ContributorsController extends Controller {
 
     // Initialise our SPARQL client
     \EasyRdf_Namespace::set('ont', 'http://adouglas.github.io/onto/php-packages.rdf#');
-    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?query=');
+    $sparql = new \EasyRdf_Sparql_Client('http://localhost:8080/openrdf-workbench/repositories/repo1/query?limit=0&query=');
 
     $queue = new NodeQueue();
     $visited = array();
@@ -146,7 +152,7 @@ class ContributorsController extends Controller {
 
     // Load the current collaborators
     for ($i = 0; $i < count($initialContributor); $i++) {
-      $contributor = $initialContributor[$i]->contributer->getValue();
+      $contributor = $initialContributor[$i]->contributor->getValue();
       $nodeHash = md5($contributor);
       $queue->enqueue($contributor);
       $visited[$nodeHash] = new RankedNode($nodeHash, $contributor, 1, 1);
@@ -219,7 +225,7 @@ class ContributorsController extends Controller {
         '?end ont:name ?startname. ' .
       '} ' .
     '}GROUP BY ?startname ?endname ' .
-    'LIMIT 1000');
+    'LIMIT 4000');
 
     $parentScore = $currentNodeFinalScore;
     $newDepth = $depth + 1;

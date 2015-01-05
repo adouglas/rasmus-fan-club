@@ -9,11 +9,11 @@ PREFIX pext:<http://proton.semanticweb.org/protonext#>
 SELECT ?startname ?endname (count(?name) as ?link_strength)
 WHERE
 {
-  ?start ont:name "d4rkstar".
+  ?start ont:name "LeoColomb".
   ?start ont:name ?startname.
   ?end ont:name ?endname.
-  ?start ont:collaboratesOn ?mid.
-  ?mid ont:hasCollaborator ?end.
+  ?start ont:contributorOn ?mid.
+  ?mid ont:hasContributor ?end.
   ?mid ont:repostoryName ?name.
   FILTER NOT EXISTS
   {

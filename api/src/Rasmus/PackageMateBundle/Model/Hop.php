@@ -12,14 +12,14 @@ class Hop {
   */
   public $repo;
   /**
-  * A single contributer to the given repository
+  * A single contributor to the given repository
   * @var string
   */
   public $contributor;
 
   /**
   * @param string $repo        A single repository
-  * @param string $contributor An associated user (colaborator)
+  * @param string $contributor An associated user (contributor)
   */
   public function __construct($repo, $contributor) {
     $this->repo = $repo;

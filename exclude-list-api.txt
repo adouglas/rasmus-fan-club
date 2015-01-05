@@ -1,0 +1,3 @@
+app/cache/
+info.aduna.logging.dir_IS_UNDEFINED/
+app/logs/
