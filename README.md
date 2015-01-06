@@ -27,7 +27,7 @@ Rest calls are handled by Symfony2 and the FOSRestBundle, NelmioApiDocBundle (un
 
 + **trace-user?user1=[github_username]&user2=[github_username]** - Traces the path between two GitHub users. If one of the users is invalid, or if no path is found this returns an error message. All messages are provided back as JSON in the form below. This call leverages SPARQL to carry out a fast check on the posibility of a path between the two users so that negative responses are provided very quickly.
 
-```json
+```
 {  
   meta:{  
     status:200,
@@ -95,7 +95,7 @@ Rest calls are handled by Symfony2 and the FOSRestBundle, NelmioApiDocBundle (un
 + **/find-contributors?package=[packagist_packagename]** - Uses a BFS approch starting with the existing contributors to find connections who may be willing to join. Suggestions are ranked by the strength of their association with existing users. For example if an existing user and a 3rd party work on lots of the same projects they will have a string bond, equaly, is two of the existing users have a connection with the same person (even if this routes through different projects) they will again have a stronger bond. All responses come in JSON in the form bellow.
   + **Paging** - find-contributors allows management of the number of suggested user returned through paging the query parameter *?page=[page_number]* can be used to select a page, and the query parameter *?per_page=[number_per_page]* can be used to list the number of suggestions listed per page.
 
-```json
+```
 {  
   meta:{  
     status:200,
