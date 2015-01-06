@@ -43,7 +43,7 @@ angular.module('webApp')
     $scope.$on('$viewContentLoaded', function(){
       var searchObject = $location.search();
       if(searchObject && Object.keys(searchObject).length !== 0){
-        $scope.pack = searchObject.pack;
+        $scope.pack = searchObject.package;
         $scope.find();
       }
     }

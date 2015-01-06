@@ -40,8 +40,8 @@ angular.module('webApp')
 
     var init = function(){
       $scope.processing = false;
+      
       var searchObject = $location.search();
-
       $scope.$on('$viewContentLoaded', function(){
         if(searchObject && searchObject.user1 && searchObject.user2){
           $scope.users.user1 = searchObject.user1;
