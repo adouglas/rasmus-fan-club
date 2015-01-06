@@ -25,11 +25,13 @@ angular
       })
       .when('/trace', {
         templateUrl: 'views/trace.html',
-        controller: 'TraceCtrl'
+        controller: 'TraceCtrl',
+        reloadOnSearch: false
       })
       .when('/find', {
         templateUrl: 'views/find.html',
-        controller: 'FindCtrl'
+        controller: 'FindCtrl',
+        reloadOnSearch: false
       })
       .otherwise({
         redirectTo: '/'

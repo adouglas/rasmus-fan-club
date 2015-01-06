@@ -6,7 +6,7 @@
     text-align: center
     padding: 40px 0
   #title-block
-    background: #DDD
+    background: #DDD url('../images/code-background-grey.jpg') center top no-repeat
     .container
       min-height: 300px
       max-width: 1080px
@@ -65,10 +65,16 @@
         margin-top: 19px
     .results
       margin-top: 10px
+      border: 1pt solid #A8A8A8
       .results-row
         position: relative
         text-align: left
         height: 60px
+        background: #D0D0D0
+        border: 1px solid #F0F0F0
+        margin-bottom: -1px
+        &.last
+          margin-bottom: 0
         .number
           font-size: 28px
           line-height: 60px
@@ -83,10 +89,6 @@
           position: absolute
           top: 0
           left: 45px
-        &.collaborator
-          background-color: #EBEBEB
-        &.repository
-          background-color: #E6E6E6
         .name
           position: absolute
           top: 5px

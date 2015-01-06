@@ -2,7 +2,7 @@
 
 
 angular.module('webApp')
-.controller('FindCtrl', function ($scope,findService) {
+.controller('FindCtrl', function ($scope,$location,findService) {
   $scope.errors = {};
 
   $scope.find = function(){
@@ -16,8 +16,9 @@ angular.module('webApp')
       $scope.processing = true;
       $scope.users = [];
 
+      $location.search({package: $scope.pack});
+
       findService.trace($scope.pack).success(function(data){
-        console.log(data);
         if(!data.data.contributors_found){
           $scope.errors.invalidpackage = true;
           $scope.processing = false;
@@ -38,7 +39,17 @@ angular.module('webApp')
 
   var init = function(){
     $scope.processing = false;
+
+    $scope.$on('$viewContentLoaded', function(){
+      var searchObject = $location.search();
+      if(searchObject && Object.keys(searchObject).length !== 0){
+        $scope.pack = searchObject.pack;
+        $scope.find();
+      }
+    }
+  )
   };
+
   init();
 
 });

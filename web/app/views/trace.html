@@ -72,8 +72,8 @@
           <div class="row">
             <div class="col-sm-12">
               <div class="content">
-                <div class="results">
-                  <div ng-repeat="result in paths" class="results-row">
+                <div class="results" ng-if="paths.length > 0">
+                  <div ng-repeat="result in paths" class="results-row" ng-class="{'last':$last}">
                     <span class="number">{{result.order}}</span>
                     <span ng-if="result.type == 'contributor'" class="icon">&#128100;</span>
                     <span ng-if="result.type == 'repository'" class="icon">&#128230;</span>
